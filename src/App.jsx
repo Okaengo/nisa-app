@@ -899,7 +899,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
         data-ad-format="auto"
         data-full-width-responsive="true" />
       ============================================================== */}
-      <div style={{ border: "1px dashed rgba(16,185,129,0.3)", borderRadius: 8, height: 60, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(16,185,129,0.3)", fontSize: 12, marginBottom: 16 }}>広告</div>
       <div style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.1)", borderRadius: 16, padding: "22px 8px 14px", marginBottom: 22 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginLeft: 16, marginBottom: 14, flexWrap: "wrap" }}>
           <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 3 }}>資産推移グラフ（年次）</div>
@@ -1201,7 +1200,6 @@ export default function NisaSimulator() {
         data-ad-format="auto"
         data-full-width-responsive="true" />
       ========================================= */}
-      <div style={{ border: "1px dashed rgba(16,185,129,0.3)", borderRadius: 8, height: 60, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(16,185,129,0.3)", fontSize: 12, marginBottom: 16 }}>広告</div>
 
       {/* 戻る・進むボタン（固定・左上） */}
       <div style={{ position: "fixed", top: 12, left: 12, zIndex: 1000, display: "flex", gap: 6 }}>
@@ -1365,7 +1363,6 @@ export default function NisaSimulator() {
           data-ad-format="auto"
           data-full-width-responsive="true" />
         ========================================= */}
-        <div style={{ border: "1px dashed rgba(16,185,129,0.3)", borderRadius: 8, height: 60, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(16,185,129,0.3)", fontSize: 12, marginBottom: 16 }}>広告</div>
         <div style={{ marginTop: 40, color: "#a7f3d0", lineHeight: 1.9, fontSize: 14 }}>
           <h2 style={{ fontSize: 18, fontWeight: 900, color: "#6ee7b7", marginBottom: 12, marginTop: 0 }}>ライフステージで変化する新NISA積立額に対応</h2>
           <p style={{ color: "#d1d5db", marginBottom: 16 }}>多くの積み立てシミュレーターは、「毎月同じ金額を積み立て続ける」ことを前提として作られています。しかし実際の人生では、投資に回せる金額は常に変化します。就職・昇給・転職・結婚・住宅購入・教育費など、ライフステージによって収入や支出は大きく変わるため、長期間ずっと同じ金額を積み立て続けるケースは多くありません。</p>
