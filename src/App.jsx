@@ -608,24 +608,26 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
 
       {/* 設定パネル */}
       <div style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.1)", borderRadius: 16, padding: 24, marginBottom: 22 }}>
-        <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 3, marginBottom: 18 }}>シミュレーション設定</div>
+        {/* フェーズテーブル */}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 2, marginBottom: 6 }}>積み立てフェーズ設定</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
+            <button onClick={() => setUseStartDate(v => !v)} style={{
+              background: useStartDate ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.04)",
+              border: `1px solid ${useStartDate ? "rgba(16,185,129,0.5)" : "rgba(16,185,129,0.15)"}`,
+              borderRadius: 8, padding: "4px 12px", cursor: "pointer",
+              color: useStartDate ? "#6ee7b7" : "#4b5563", fontSize: 11, fontWeight: useStartDate ? 700 : 400,
+            }}>開始年月・年齢 {useStartDate ? "ON" : "OFF"}</button>
+            <button onClick={() => setShowBonus(b => !b)} style={{ background: showBonus ? "rgba(251,191,36,0.15)" : "rgba(16,185,129,0.08)", border: `1px solid ${showBonus ? "rgba(251,191,36,0.4)" : "rgba(16,185,129,0.2)"}`, borderRadius: 6, color: showBonus ? "#fbbf24" : "#6ee7b7", fontSize: 11, padding: "4px 12px", cursor: "pointer" }}>💰 ボーナス {showBonus ? "非表示" : "表示"}</button>
+          </div>
 
-
-        {/* 開始年月・年齢 */}
-        <div style={{ marginBottom: 22 }}>
-
-          <div>
-            <div style={{ marginBottom: 8 }}>
-              <button onClick={() => setUseStartDate(v => !v)} style={{
-                background: useStartDate ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.04)",
-                border: `1px solid ${useStartDate ? "rgba(16,185,129,0.5)" : "rgba(16,185,129,0.15)"}`,
-                borderRadius: 8, padding: "6px 14px", cursor: "pointer",
-                color: useStartDate ? "#6ee7b7" : "#4b5563", fontSize: 12, fontWeight: useStartDate ? 700 : 400,
-              }}>開始年月・年齢 {useStartDate ? "ON" : "OFF"}</button>
-              {!useStartDate && <div style={{ fontSize: 10, color: "#6b7280", marginTop: 6 }}>ONにすると開始年月・年齢を設定でき、年別推移が西暦年表示になります。</div>}
+          {/* 開始年月・年齢 */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 4 }}>
+              {!useStartDate && <div style={{ fontSize: 10, color: "#6b7280", marginTop: 4 }}>ONにすると開始年月・年齢を設定でき、年別推移が西暦年表示になります。</div>}
             </div>
             {useStartDate && (<>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
                 <input type="number" min={2000} max={2100}
                   value={startYearFocused ? (startYearDraft === null ? "" : startYearDraft) : startYear}
                   onFocus={() => { setStartYearFocused(true); setStartYearDraft(String(startYear)); }}
@@ -645,10 +647,10 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                   style={{ ...S.inputBase, ...S.inputGreen, width: 60, borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 13, color: "#6ee7b7" }}>歳</span>
               </div>
-              <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 8, lineHeight: 1.7 }}>
+              <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 6, lineHeight: 1.7 }}>
                 年齢を設定する場合は、開始する年になる年齢を入力してください。
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
                 {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
                   <button key={m} onClick={() => setStartMonth(m)} style={{
                     background: startMonth === m ? "rgba(16,185,129,0.25)" : "transparent",
@@ -661,14 +663,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
               </div>
             </>)}
           </div>
-        </div>
 
-        {/* フェーズテーブル */}
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 2, flex: 1 }}>積み立てフェーズ設定</div>
-            <button onClick={() => setShowBonus(b => !b)} style={{ background: showBonus ? "rgba(251,191,36,0.15)" : "rgba(16,185,129,0.08)", border: `1px solid ${showBonus ? "rgba(251,191,36,0.4)" : "rgba(16,185,129,0.2)"}`, borderRadius: 6, color: showBonus ? "#fbbf24" : "#6ee7b7", fontSize: 11, padding: "4px 12px", cursor: "pointer" }}>🎁 ボーナス {showBonus ? "非表示" : "表示"}</button>
-          </div>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#a7f3d0", marginBottom: 10 }}>
             総期間 {periodLabel(Math.floor(totalMonths/12), totalMonths%12)}
           </div>
