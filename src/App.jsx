@@ -277,9 +277,31 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
   const diff = balanceAtTarget - required;
   const achieved = balanceAtTarget >= required && required > 0;
 
+  // 不足時の逆算
+  let monthlyAdd = null;
+  let yearsExtend = null;
+  if (!achieved && required > 0 && diff < 0) {
+    // 全体を均等に増やす場合：不足額 ÷ 残り月数
+    const totalMonths = chartData.length * 12;
+    if (totalMonths > 0) {
+      monthlyAdd = Math.ceil(Math.abs(diff) / totalMonths * 10) / 10;
+    }
+    // 目標年を延ばす場合：不足額を埋める年数を年次データから探す
+    const lastBalance = chartData[chartData.length - 1]?.資産総額_税引後 ?? 0;
+    if (lastBalance >= required) {
+      const achieveRow = chartData.find(d => d.資産総額_税引後 >= required);
+      if (achieveRow) {
+        yearsExtend = useStartDate
+          ? `${achieveRow.actualYear}年`
+          : `${achieveRow.x}年目`;
+      }
+    }
+  }
+
   return (
     <div style={{ borderTop: "1px solid rgba(16,185,129,0.1)", paddingTop: 16 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center" }}>
+      {/* 1行目：必要額・時点の額・不足額＋アドバイス */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start", marginBottom: achieved ? 0 : 12 }}>
         <div>
           <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>FIRE必要資産（{withdrawalRate}%取り崩し）</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{required > 0 ? `${required.toLocaleString()}万円` : "—"}</div>
@@ -293,15 +315,25 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
           <div style={{ fontSize: 22, fontWeight: 900, color: achieved ? "#34d399" : "#f87171" }}>
             {achieved ? "+" : "▲"}{Math.abs(diff).toLocaleString()}万円
           </div>
+          {!achieved && monthlyAdd !== null && (
+            <div style={{ fontSize: 10, color: "#6b7280", marginTop: 4 }}>早い時期に増やすほど複利効果が高くなります。</div>
+          )}
         </div>
-        <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontSize: 13, color: achieved ? "#6ee7b7" : "#f87171", fontWeight: 700, lineHeight: 1.9 }}>
-            {achieved
-              ? `🎉 目標達成！余裕分 ${Math.abs(diff).toLocaleString()}万円は安全マージンになります。`
-              : `あと ${Math.abs(diff).toLocaleString()}万円の積み上げが必要です。フェーズの調整や取り崩し率の見直しを検討してみてください。`}
+        {achieved && (
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <div style={{ fontSize: 13, color: "#6ee7b7", fontWeight: 700, lineHeight: 1.9 }}>
+              🎉 目標達成！余裕分 {Math.abs(diff).toLocaleString()}万円は安全マージンになります。
+            </div>
           </div>
-        </div>
+        )}
       </div>
+      {/* 不足時：提案を横幅フルで表示 */}
+      {!achieved && (
+        <div style={{ fontSize: 12, color: "#9ca3af", lineHeight: 2, borderTop: "1px solid rgba(16,185,129,0.08)", paddingTop: 10 }}>
+          {monthlyAdd !== null && <div>・積立額を全体で月+{monthlyAdd}万円増やすと達成できます。</div>}
+          {yearsExtend !== null && <div>・目標を{yearsExtend}まで延ばすと達成できます。</div>}
+        </div>
+      )}
     </div>
   );
 }
@@ -547,7 +579,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
         {showFire && (
           <div style={{ marginTop: 8, background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.12)", borderRadius: 16, padding: 24, marginBottom: 22 }}>
             <div style={{ fontSize: 11, color: "#6ee7b7", letterSpacing: 3, marginBottom: 18 }}>🔥 FIRE目標設定</div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
 
               {/* 月額 */}
               <div style={{ flex: 1, minWidth: 180 }}>
@@ -562,6 +594,12 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                   <span style={{ fontSize: 14, color: "#6ee7b7" }}>万円 / 月</span>
                   {fireMonthly > 0 && <span style={{ fontSize: 12, color: "#4b5563" }}>（年間 {fireMonthly * 12}万円）</span>}
                 </div>
+                {fireMonthly > 0 && fireRate > 0 && (
+                  <div style={{ marginTop: 6, display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <span style={{ fontSize: 11, color: "#6b7280" }}>FIRE必要資産（{fireRate}%取り崩し）：</span>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: "#6ee7b7" }}>{Math.round(fireMonthly * 12 / (fireRate / 100)).toLocaleString()}万円</span>
+                  </div>
+                )}
               </div>
 
               {/* 取り崩し率 */}
@@ -594,14 +632,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                 </div>
               </div>
             </div>
-
-            {/* 必要資産 */}
-            {fireMonthly > 0 && fireRate > 0 && (
-              <div style={{ marginTop: 16, display: "flex", alignItems: "baseline", gap: 10 }}>
-                <span style={{ fontSize: 12, color: "#6b7280" }}>FIRE必要資産（{fireRate}%取り崩し）：</span>
-                <span style={{ fontSize: 20, fontWeight: 900, color: "#6ee7b7" }}>{Math.round(fireMonthly * 12 / (fireRate / 100)).toLocaleString()}万円</span>
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -1123,6 +1153,23 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
 });
 
 // ── メインコンポーネント ──
+function AccordionItem({ title, content }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: "1px solid rgba(16,185,129,0.15)" }}>
+      <button onClick={() => setOpen(v => !v)} style={{
+        width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "14px 0", color: "#6ee7b7", fontSize: 15, fontWeight: 700,
+      }}>
+        <span>{title}</span>
+        <span style={{ fontSize: 18, color: "#6ee7b7", marginLeft: 8 }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && <div style={{ paddingBottom: 16, fontSize: 14, lineHeight: 1.9 }}>{content}</div>}
+    </div>
+  );
+}
+
 export default function NisaSimulator() {
   const [plans, setPlans] = useState([{ id: 1, name: "プランA" }]);
   const [planInitialStates, setPlanInitialStates] = useState({});
@@ -1358,23 +1405,40 @@ export default function NisaSimulator() {
           data-ad-format="auto"
           data-full-width-responsive="true" />
         ========================================= */}
-        <div style={{ marginTop: 40, color: "#a7f3d0", lineHeight: 1.9, fontSize: 14 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 900, color: "#6ee7b7", marginBottom: 12, marginTop: 0 }}>ライフステージで変化する新NISA積立額に対応</h2>
-          <p style={{ color: "#d1d5db", marginBottom: 16 }}>多くの積み立てシミュレーターは、「毎月同じ金額を積み立て続ける」ことを前提として作られています。しかし実際の人生では、投資に回せる金額は常に変化します。就職・昇給・転職・結婚・住宅購入・教育費など、ライフステージによって収入や支出は大きく変わるため、長期間ずっと同じ金額を積み立て続けるケースは多くありません。</p>
-          <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターは、そうした現実的な資産形成を想定し、フェーズごとに積立額・積立期間・入金方法を変更できるよう設計しています。たとえば、「学生期間は少額積立」「就職後に積立額を増やす」「住宅購入後は一時的に積立額を減らす」といったように、人生設計に合わせたシミュレーションが可能です。</p>
-          <p style={{ color: "#d1d5db", marginBottom: 32 }}>また、一般的な毎月積み立てだけでなく、年始一括投資・年度始一括投資・四半期ごとの投資にも対応しています。さらに、通常の積み立てとは別に、ボーナスから追加で投資を行うための「ボーナス設定」にも対応しています。ボーナス投資は年0回・年1回・年2回から選択でき、実際の家計や収入状況に近い形でシミュレーションを行えます。積立額だけでなく、「いつ投資するか」によっても長期的な結果は変化するため、さまざまな投資スタイルを試せるようにしています。</p>
-          <h2 style={{ fontSize: 18, fontWeight: 900, color: "#6ee7b7", marginBottom: 12 }}>FIREを目指した資産シミュレーション</h2>
-          <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIRE（Financial Independence, Retire Early）とは、経済的自立によって早期退職を実現するライフスタイルです。達成に必要なのは「毎月いくら必要か」と「何%で取り崩すか」の2つ。このシミュレーターではその必要資産額を自動計算し、今のプランで何年何月に達成できるかを確認できます。</p>
-          <p style={{ color: "#d1d5db", marginBottom: 32 }}>取り崩し率は一般的に4%ルール（トリニティスタディ）が知られていますが、安全重視なら3〜3.5%、物価の安い国への移住を前提にするなら5〜6%と、自分のライフプランに合わせて調整できます。</p>
-
-          <h2 style={{ fontSize: 18, fontWeight: 900, color: "#6ee7b7", marginBottom: 12 }}>「コーストFIRE」を見据えた放置期間シミュレーション</h2>
-          <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターでは、「放置期間」の設定にも対応しています。これは、近年注目されている「コーストFIRE」という考え方をシミュレーションするための機能です。コーストFIREとは、若いうちにある程度の資産を形成したあと、追加投資を停止し、その後は保有資産を長期運用していく考え方です。長期投資では、積み立てを続けることだけでなく、「どれだけ長く運用期間を確保できるか」も重要になります。</p>
-          <p style={{ color: "#d1d5db", marginBottom: 32 }}>この機能を使うことで、「何歳まで積み立てれば、その後は追加投資なしでもどれくらい資産が成長するのか」を確認できます。積立期間と放置期間を分けて確認できるため、長期運用による複利効果を視覚的に把握しやすくしています。</p>
-          <h2 style={{ fontSize: 18, fontWeight: 900, color: "#6ee7b7", marginBottom: 12 }}>新NISAの「生涯投資枠1,800万円」超過・特定口座の課税自動計算</h2>
-          <p style={{ color: "#d1d5db", marginBottom: 16 }}>新NISAでは、生涯非課税枠1,800万円、年間投資上限360万円が設定されています。しかし、長期間積み立てを続ける場合、NISA枠を使い切るケースも少なくありません。</p>
-          <p style={{ color: "#d1d5db", marginBottom: 16 }}>一般的なシミュレーターでは、NISA枠を超えた場合の税金まで考慮されていないことがありますが、このツールでは非課税枠を自動で追跡し、超過分は特定口座として自動計算します。特定口座で発生した運用益には20.315%の税金がかかるため、税引前資産だけでなく、概算税額や税引後資産も表示されます。</p>
-          <p style={{ color: "#d1d5db", marginBottom: 32 }}>これにより、「NISA枠をいつ使い切るか」「超過後にどれくらい税金が発生するか」を含めて確認できます。単純な理想値だけではなく、課税まで考慮した、より現実的な資産形成シミュレーションを目的としています。</p>
-          <p style={{ color: "#9ca3af", fontSize: 12, lineHeight: 1.8, borderTop: "1px solid rgba(16,185,129,0.1)", paddingTop: 20 }}>
+        <div style={{ marginTop: 40 }}>
+          {[
+            {
+              title: "ライフステージで変化する新NISA積立額に対応",
+              content: <>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>多くの積み立てシミュレーターは、「毎月同じ金額を積み立て続ける」ことを前提として作られています。しかし実際の人生では、投資に回せる金額は常に変化します。就職・昇給・転職・結婚・住宅購入・教育費など、ライフステージによって収入や支出は大きく変わるため、長期間ずっと同じ金額を積み立て続けるケースは多くありません。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターは、そうした現実的な資産形成を想定し、フェーズごとに積立額・積立期間・入金方法を変更できるよう設計しています。たとえば、「学生期間は少額積立」「就職後に積立額を増やす」「住宅購入後は一時的に積立額を減らす」といったように、人生設計に合わせたシミュレーションが可能です。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>また、一般的な毎月積み立てだけでなく、年始一括投資・年度始一括投資・四半期ごとの投資にも対応しています。さらに、通常の積み立てとは別に、ボーナスから追加で投資を行うための「ボーナス設定」にも対応しています。ボーナス投資は年0回・年1回・年2回から選択でき、実際の家計や収入状況に近い形でシミュレーションを行えます。</p>
+              </>
+            },
+            {
+              title: "FIREを目指した資産シミュレーション",
+              content: <>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIRE（Financial Independence, Retire Early）とは、経済的自立によって早期退職を実現するライフスタイルです。達成に必要なのは「毎月いくら必要か」と「何%で取り崩すか」の2つ。このシミュレーターではその必要資産額を自動計算し、今のプランで何年何月に達成できるかを確認できます。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>取り崩し率は一般的に4%ルール（トリニティスタディ）が知られていますが、安全重視なら3〜3.5%、物価の安い国への移住を前提にするなら5〜6%と、自分のライフプランに合わせて調整できます。</p>
+              </>
+            },
+            {
+              title: "「コーストFIRE」を見据えた放置期間シミュレーション",
+              content: <>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターでは、「放置期間」の設定にも対応しています。これは、近年注目されている「コーストFIRE」という考え方をシミュレーションするための機能です。コーストFIREとは、若いうちにある程度の資産を形成したあと、追加投資を停止し、その後は保有資産を長期運用していく考え方です。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>この機能を使うことで、「何歳まで積み立てれば、その後は追加投資なしでもどれくらい資産が成長するのか」を確認できます。積立期間と放置期間を分けて確認できるため、長期運用による複利効果を視覚的に把握しやすくしています。</p>
+              </>
+            },
+            {
+              title: "新NISAの「生涯投資枠1,800万円」超過・特定口座の課税自動計算",
+              content: <>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>新NISAでは、生涯非課税枠1,800万円、年間投資上限360万円が設定されています。しかし、長期間積み立てを続ける場合、NISA枠を使い切るケースも少なくありません。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>一般的なシミュレーターでは、NISA枠を超えた場合の税金まで考慮されていないことがありますが、このツールでは非課税枠を自動で追跡し、超過分は特定口座として自動計算します。特定口座で発生した運用益には20.315%の税金がかかるため、税引前資産だけでなく、概算税額や税引後資産も表示されます。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>これにより、「NISA枠をいつ使い切るか」「超過後にどれくらい税金が発生するか」を含めて確認できます。単純な理想値だけではなく、課税まで考慮した、より現実的な資産形成シミュレーションを目的としています。</p>
+              </>
+            },
+          ].map((item, i) => <AccordionItem key={i} title={item.title} content={item.content} />)}
+          <p style={{ color: "#9ca3af", fontSize: 12, lineHeight: 1.8, borderTop: "1px solid rgba(16,185,129,0.1)", paddingTop: 20, marginTop: 8 }}>
             ※ このシミュレーターは情報提供を目的としており、特定の金融商品への投資を推奨するものではありません。シミュレーション結果は入力値をもとにした参考値であり、実際の運用成績・税額とは異なる場合があります。投資判断はご自身の責任において行ってください。<br />
             ※ 月次複利計算。ボーナスは6月・12月に一括投資。配当・分配金の課税は考慮外。税率 20.315%（所得税15% + 復興特別所得税0.315% + 住民税5%）。
           </p>
