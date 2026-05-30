@@ -793,9 +793,9 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <div>
               <div style={{ fontSize: 13, color: "#c4b5fd" }}>🌙 放置期間</div>
-              <div style={{ fontSize: 10, color: "#7c3aed", marginTop: 2 }}>（積み立て終了後）</div>
+              <div style={{ fontSize: 10, color: "#7c3aed", marginTop: 2, whiteSpace: "nowrap" }}>（積み立て終了後）</div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap", whiteSpace: "nowrap" }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
                 <input type="number" min={0} max={600}
                   value={coastDraft === null ? "" : coastDraft !== "" ? coastDraft : Math.floor(coastMonths / 12)}
