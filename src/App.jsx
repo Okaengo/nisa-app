@@ -245,7 +245,7 @@ function runSim(state) {
 }
 
 // ── FIRE結果パネル（年別推移の下） ──
-function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, chartData, monthlyData, useStartDate, startYear }) {
+function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, chartData, monthlyData, useStartDate, startYear, state }) {
   if (!monthlyAmount) return null;
   const annualAmount = monthlyAmount * 12;
   const required = withdrawalRate > 0 ? Math.round(annualAmount / (withdrawalRate / 100)) : 0;
@@ -277,23 +277,40 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
   const diff = balanceAtTarget - required;
   const achieved = balanceAtTarget >= required && required > 0;
 
-  // 不足時の逆算
+  // 不足時の逆算（二分探索で最小増額を求める）
   let monthlyAdd = null;
   let yearsExtend = null;
   if (!achieved && required > 0 && diff < 0) {
-    // 全体を均等に増やす場合：不足額 ÷ 残り月数
-    const totalMonths = chartData.length * 12;
-    if (totalMonths > 0) {
-      monthlyAdd = Math.ceil(Math.abs(diff) / totalMonths * 10) / 10;
+    // 二分探索：全フェーズを均等に増額して達成できる最小額を求める
+    const testSim = (addAmount) => {
+      const testState = {
+        ...state,
+        phases: state.phases.map(p => ({ ...p, amount: (p.amount || 0) + addAmount }))
+      };
+      const result = runSim(testState);
+      const targetRow = targetYear > 0
+        ? (useStartDate
+            ? result.chartData.find(d => d.actualYear >= targetYear)
+            : result.chartData.find(d => d.x >= targetYear))
+          ?? result.chartData[result.chartData.length - 1]
+        : result.chartData[result.chartData.length - 1];
+      return (targetRow?.資産総額_税引後 ?? 0) >= required;
+    };
+
+    let lo = 0, hi = 100, mid;
+    for (let i = 0; i < 20; i++) {
+      mid = Math.round((lo + hi) / 2 * 10) / 10;
+      if (testSim(mid)) hi = mid;
+      else lo = mid;
     }
-    // 目標年を延ばす場合：不足額を埋める年数を年次データから探す
+    monthlyAdd = Math.ceil(hi * 10) / 10;
+
+    // 目標年延長
     const lastBalance = chartData[chartData.length - 1]?.資産総額_税引後 ?? 0;
     if (lastBalance >= required) {
       const achieveRow = chartData.find(d => d.資産総額_税引後 >= required);
       if (achieveRow) {
-        yearsExtend = useStartDate
-          ? `${achieveRow.actualYear}年`
-          : `${achieveRow.x}年目`;
+        yearsExtend = useStartDate ? `${achieveRow.actualYear}年` : `${achieveRow.x}年目`;
       }
     }
   }
@@ -324,6 +341,15 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
             <div style={{ fontSize: 13, color: "#6ee7b7", fontWeight: 700, lineHeight: 1.9 }}>
               🎉 目標達成！余裕分 {Math.abs(diff).toLocaleString()}万円は安全マージンになります。
             </div>
+            {(() => {
+              const finalBalance = chartData[chartData.length - 1]?.資産総額_税引後 ?? 0;
+              const monthlyFromFinal = Math.floor(finalBalance * (withdrawalRate / 100) / 12 * 10) / 10;
+              return (
+                <div style={{ marginTop: 4, fontSize: 12, color: "#9ca3af", lineHeight: 1.9 }}>
+                  最終資産{finalBalance.toLocaleString()}万円を{withdrawalRate}%で取り崩すと月{monthlyFromFinal.toLocaleString()}万円使えます。
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>
@@ -1145,6 +1171,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             monthlyData={monthlyData}
             useStartDate={useStartDate}
             startYear={startYear}
+            state={current}
           />
         </div>
       )}
