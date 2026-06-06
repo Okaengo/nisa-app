@@ -723,90 +723,79 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
           <div style={{ fontSize: 13, fontWeight: 700, color: "#a7f3d0", marginBottom: 10 }}>
             総期間 {periodLabel(Math.floor(totalMonths/12), totalMonths%12)}
           </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead>
-                <tr style={{ color: "#6ee7b7", fontSize: 10 }}>
-                  <th style={{ textAlign: "left", padding: "6px 8px", fontWeight: 400, minWidth: 120 }}>フェーズ名</th>
-                  <th style={{ textAlign: "left", padding: "6px 8px", fontWeight: 400 }}>入金方法</th>
-                  <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 400 }}>入金額<br /><span style={{ color: "#4b5563" }}>（万円）</span></th>
-                  {showBonus && <>
-                    <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 400, color: "#fbbf24" }}>ボーナス<br /><span style={{ color: "#78350f" }}>（万円/回）</span></th>
-                    <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 400, color: "#fbbf24" }}>回数<br /><span style={{ color: "#78350f" }}>（年）</span></th>
-                  </>}
-                  <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 400 }}>年</th>
-                  <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 400 }}>ヶ月</th>
-                  <th style={{ textAlign: "center", padding: "6px 8px", fontWeight: 400, color: "#4b5563", fontSize: 9 }}>合計期間</th>
-                  <th style={{ padding: "6px 8px" }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {phases.map((phase, i) => (
-                  <tr key={phase.id} style={{ borderTop: "1px solid rgba(16,185,129,0.08)", background: i % 2 === 0 ? "rgba(16,185,129,0.02)" : "transparent" }}>
-                    <td style={{ padding: "7px 8px" }}>
-                      <div style={{ width: 120, overflowX: "auto", whiteSpace: "nowrap" }}>
-                        <input value={phase.label} onChange={e => updatePhase(phase.id, "label", e.target.value)}
-                          style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(16,185,129,0.2)", color: "#e2f5ec", fontSize: 16, outline: "none", padding: "2px 4px", whiteSpace: "nowrap" }} />
-                      </div>
-                    </td>
-                    <td style={{ padding: "7px 8px" }}>
-                      <select value={phase.method || "monthly"} onChange={e => updatePhase(phase.id, "method", e.target.value)}
-                        style={{ ...numInput(130), textAlign: "left" }}>
-                        {CONTRIB_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                      </select>
-                    </td>
-                    <td style={{ padding: "7px 8px", textAlign: "right" }}>
-                      <input type="number" min={0} max={3600}
-                        value={getDraft(phase.id, "amount", phase.amount)}
-                        onFocus={() => onFocusNum(phase.id, "amount", phase.amount)}
-                        onChange={e => onChangeNum(phase.id, "amount", e.target.value)}
-                        onBlur={e => onBlurNum(phase.id, "amount", e.target.value, 0)}
-                        style={numInput(76)} />
-                    </td>
-                    {showBonus && <>
-                      <td style={{ padding: "7px 8px", textAlign: "right" }}>
-                        <input type="number" min={0} max={500}
-                          value={getDraft(phase.id, "bonusPerTime", phase.bonusPerTime || 0)}
-                          onFocus={() => onFocusNum(phase.id, "bonusPerTime", phase.bonusPerTime || 0)}
-                          onChange={e => onChangeNum(phase.id, "bonusPerTime", e.target.value)}
-                          onBlur={e => onBlurNum(phase.id, "bonusPerTime", e.target.value, 0)}
-                          style={{ ...numInput(70), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }} />
-                      </td>
-                      <td style={{ padding: "7px 8px", textAlign: "right" }}>
-                        <select value={phase.bonusTimes ?? 0} onChange={e => updatePhase(phase.id, "bonusTimes", e.target.value)}
-                          style={{ ...numInput(60), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }}>
-                          <option value={0}>0回</option>
-                          <option value={1}>1回</option>
-                          <option value={2}>2回</option>
-                        </select>
-                      </td>
-                    </>}
-                    <td style={{ padding: "7px 8px", textAlign: "right" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {phases.map((phase, i) => (
+              <div key={phase.id} style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 10, padding: "12px 14px" }}>
+                {/* 1行目：フェーズ名・削除ボタン */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 8 }}>
+                  <input value={phase.label} onChange={e => updatePhase(phase.id, "label", e.target.value)}
+                    style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(16,185,129,0.2)", color: "#e2f5ec", fontSize: 15, fontWeight: 700, outline: "none", padding: "2px 4px", flex: 1, minWidth: 0 }} />
+                  <button onClick={() => removePhase(phase.id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 18, opacity: 0.6, flexShrink: 0, lineHeight: 1 }}>×</button>
+                </div>
+                {/* 2行目：期間・入金方法・入金額・ボーナス */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>期間</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                       <input type="number" min={0} max={99}
                         value={getDraft(phase.id, "years", phase.years ?? 0)}
                         onChange={e => onChangeNum(phase.id, "years", e.target.value)}
                         onFocus={() => onFocusNum(phase.id, "years", phase.years ?? 0)}
                         onBlur={e => onBlurNum(phase.id, "years", e.target.value, 0)}
-                        style={numInput(56)} />
-                    </td>
-                    <td style={{ padding: "7px 8px", textAlign: "right" }}>
+                        style={numInput(44)} />
+                      <span style={{ fontSize: 12, color: "#6ee7b7" }}>年</span>
                       <input type="number" min={0} max={11}
                         value={getDraft(phase.id, "months", phase.months ?? 0)}
                         onChange={e => onChangeNum(phase.id, "months", e.target.value)}
                         onFocus={() => onFocusNum(phase.id, "months", phase.months ?? 0)}
                         onBlur={e => onBlurNum(phase.id, "months", e.target.value, 0)}
-                        style={numInput(56)} />
-                    </td>
-                    <td style={{ padding: "7px 8px", textAlign: "center", color: "#6b7280", fontSize: 10 }}>
-                      {periodLabel(phase.years || 0, phase.months || 0)}
-                    </td>
-                    <td style={{ padding: "7px 8px", textAlign: "center" }}>
-                      <button onClick={() => removePhase(phase.id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 15, opacity: 0.6 }}>×</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        style={numInput(44)} />
+                      <span style={{ fontSize: 12, color: "#6ee7b7" }}>ヶ月</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>入金方法</div>
+                    <select value={phase.method || "monthly"} onChange={e => updatePhase(phase.id, "method", e.target.value)}
+                      style={{ ...numInput(130), textAlign: "left" }}>
+                      {CONTRIB_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>入金額</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                      <input type="number" min={0} max={3600}
+                        value={getDraft(phase.id, "amount", phase.amount)}
+                        onFocus={() => onFocusNum(phase.id, "amount", phase.amount)}
+                        onChange={e => onChangeNum(phase.id, "amount", e.target.value)}
+                        onBlur={e => onBlurNum(phase.id, "amount", e.target.value, 0)}
+                        style={numInput(64)} />
+                      <span style={{ fontSize: 12, color: "#6ee7b7" }}>万円</span>
+                    </div>
+                  </div>
+                  {showBonus && (
+                    <div>
+                      <div style={{ fontSize: 10, color: "#78350f", marginBottom: 4 }}>💰 ボーナス</div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                        <input type="number" min={0} max={500}
+                          value={getDraft(phase.id, "bonusPerTime", phase.bonusPerTime || 0)}
+                          onFocus={() => onFocusNum(phase.id, "bonusPerTime", phase.bonusPerTime || 0)}
+                          onChange={e => onChangeNum(phase.id, "bonusPerTime", e.target.value)}
+                          onBlur={e => onBlurNum(phase.id, "bonusPerTime", e.target.value, 0)}
+                          style={{ ...numInput(52), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }} />
+                        <span style={{ fontSize: 12, color: "#fbbf24" }}>万円</span>
+                        <select value={phase.bonusTimes ?? 0} onChange={e => updatePhase(phase.id, "bonusTimes", e.target.value)}
+                          style={{ ...numInput(44), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }}>
+                          <option value={0}>0</option>
+                          <option value={1}>1</option>
+                          <option value={2}>2</option>
+                        </select>
+                        <span style={{ fontSize: 12, color: "#fbbf24" }}>回/年</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
         <button onClick={addPhase} style={{ marginTop: 12, background: "rgba(16,185,129,0.07)", border: "1px dashed rgba(16,185,129,0.3)", borderRadius: 8, color: "#6ee7b7", fontSize: 12, padding: "8px 20px", cursor: "pointer", width: "100%", letterSpacing: 2 }}>＋ フェーズを追加</button>
@@ -1435,33 +1424,35 @@ export default function NisaSimulator() {
         <div style={{ marginTop: 40 }}>
           {[
             {
-              title: "ライフステージで変化する新NISA積立額に対応",
+              title: "積み立て投資について考えることは、人生設計を考えること",
               content: <>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>多くの積み立てシミュレーターは、「毎月同じ金額を積み立て続ける」ことを前提として作られています。しかし実際の人生では、投資に回せる金額は常に変化します。就職・昇給・転職・結婚・住宅購入・教育費など、ライフステージによって収入や支出は大きく変わるため、長期間ずっと同じ金額を積み立て続けるケースは多くありません。</p>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターは、そうした現実的な資産形成を想定し、フェーズごとに積立額・積立期間・入金方法を変更できるよう設計しています。たとえば、「学生期間は少額積立」「就職後に積立額を増やす」「住宅購入後は一時的に積立額を減らす」といったように、人生設計に合わせたシミュレーションが可能です。</p>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>また、一般的な毎月積み立てだけでなく、年始一括投資・年度始一括投資・四半期ごとの投資にも対応しています。さらに、通常の積み立てとは別に、ボーナスから追加で投資を行うための「ボーナス設定」にも対応しています。ボーナス投資は年0回・年1回・年2回から選択でき、実際の家計や収入状況に近い形でシミュレーションを行えます。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>多くの積み立てシミュレーターは、毎月同じ金額を積み立て続けることを前提に作られています。しかし実際には、就職・昇給・結婚など、ライフステージによって投資に使えるお金は常に変化します。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターでは、そうした現実の人生設計に合わせて積立額や期間を段階ごとに自由に変えられます。NISA枠を超えた分の税金は自動で計算するので、「いつ・いくら積み立てるか」という部分に集中できます。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIRE目標の達成年月の確認、積み立てを止めて運用だけ続ける放置期間（コーストFIRE）、NISA満額調整などの機能も備えています。自分のライフプランを思い浮かべながら、自由に試してみてください。</p>
               </>
             },
             {
-              title: "FIREを目指した資産シミュレーション",
+              title: "憧れのFIRE生活",
               content: <>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIRE（Financial Independence, Retire Early）とは、経済的自立によって早期退職を実現するライフスタイルです。達成に必要なのは「毎月いくら必要か」と「何%で取り崩すか」の2つ。このシミュレーターではその必要資産額を自動計算し、今のプランで何年何月に達成できるかを確認できます。</p>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>取り崩し率は一般的に4%ルール（トリニティスタディ）が知られていますが、安全重視なら3〜3.5%、物価の安い国への移住を前提にするなら5〜6%と、自分のライフプランに合わせて調整できます。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIREとは、Financial Independence, Retire Earlyの略、つまり経済的自立によって早期退職を実現するライフスタイルです。FIREを達成するためにまず決めることは、FIRE後に月いくらで生活するかと、何%で取り崩すかの2つです。このシミュレーターではその必要資産額を自動計算し、今のプランで何年何月に達成できるかを確認できます。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIRE後の生活費は人によって大きく異なります。完全にリタイアする場合はもちろん、パートや副業で少し収入を得ながら資産を取り崩すサイドFIREやバリスタFIREという選択肢もあります。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>取り崩し率は一般的に4%ルール（トリニティスタディ）が知られていますが、安全重視なら3〜3.5%、物価の安い国への移住を前提にするなら5〜6%と調整できます。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>自分がどんな生活を送りたいかをイメージしながら生活費や取り崩し率を考えてみてください。</p>
               </>
             },
             {
-              title: "「コーストFIRE」を見据えた放置期間シミュレーション",
+              title: "最後は放置で資産を育てる",
               content: <>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターでは、「放置期間」の設定にも対応しています。これは、近年注目されている「コーストFIRE」という考え方をシミュレーションするための機能です。コーストFIREとは、若いうちにある程度の資産を形成したあと、追加投資を停止し、その後は保有資産を長期運用していく考え方です。</p>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>この機能を使うことで、「何歳まで積み立てれば、その後は追加投資なしでもどれくらい資産が成長するのか」を確認できます。積立期間と放置期間を分けて確認できるため、長期運用による複利効果を視覚的に把握しやすくしています。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>ある程度の資産が形成されたら、そのまま放置するだけで資産が育っていく——これが「コーストFIRE」という考え方です。FIREを目指す上での選択肢の一つとして、追加投資をしなくても複利の力で資産を成長させ続ける期間を作る戦略です。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>放置期間を設定することで、「いつまで積み立てれば、その後は放置しても目標額に届くか」を確認できます。早い時期に積み立てるほど放置期間中の複利効果が大きくなるので、若いうちから始めるメリットも視覚的に把握できます。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>また、放置期間の活用法は人それぞれです。たとえば目標達成が見えてきた段階で積み立てをやめ、その分を生活防衛費として貯金に回す選択肢もあります。投資から離れた後の生活基盤を整えるための時間として使うのも賢い方法の一つです。</p>
               </>
             },
             {
-              title: "新NISAの「生涯投資枠1,800万円」超過・特定口座の課税自動計算",
+              title: "NISA枠を使い切ったら？",
               content: <>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>新NISAでは、生涯非課税枠1,800万円、年間投資上限360万円が設定されています。しかし、長期間積み立てを続ける場合、NISA枠を使い切るケースも少なくありません。</p>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>一般的なシミュレーターでは、NISA枠を超えた場合の税金まで考慮されていないことがありますが、このツールでは非課税枠を自動で追跡し、超過分は特定口座として自動計算します。特定口座で発生した運用益には20.315%の税金がかかるため、税引前資産だけでなく、概算税額や税引後資産も表示されます。</p>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>これにより、「NISA枠をいつ使い切るか」「超過後にどれくらい税金が発生するか」を含めて確認できます。単純な理想値だけではなく、課税まで考慮した、より現実的な資産形成シミュレーションを目的としています。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>新NISAには生涯投資枠1,800万円・年間上限360万円という制限があります。長期間積み立てを続けるとNISA枠を使い切るケースも少なくなく、その後は特定口座での運用になります。特定口座では運用益に20.315%の税金がかかるため、NISA口座と比べると手取りが変わります。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターでは、NISA枠をいつ使い切るか、超過後にどれだけ税金が発生するかを自動で計算するので、理想値だけでなく現実に近い資産額を把握できます。</p>
               </>
             },
           ].map((item, i) => <AccordionItem key={i} title={item.title} content={item.content} />)}
