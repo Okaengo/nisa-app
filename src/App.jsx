@@ -577,6 +577,9 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const [fireAgeDraft, setFireAgeDraft] = useState("");
   const [fireAgeFocused, setFireAgeFocused] = useState(false);
 
+  const windowWidth = useWindowWidth();
+  const isWide = windowWidth > 600;
+
   const simResult = useMemo(() => runSim(current), [current]);
   const { chartData, monthlyData, summary, coastStartMonth, hasTaxable } = simResult;
 
@@ -696,7 +699,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                     const v = e.target.value === "" ? new Date().getFullYear() : Math.min(2100, Math.max(2000, Math.floor(Number(e.target.value)) || new Date().getFullYear()));
                     setStartYear(v); setStartYearDraft(""); setStartYearFocused(false);
                   }}
-                  style={{ ...S.inputBase, ...S.inputGreen, width: 80, borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none" }} />
+                  style={{ ...S.inputBase, ...S.inputGreen, width: 56, borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 13, color: "#6ee7b7" }}>年</span>
                 <span style={{ fontSize: 12, color: "#4b5563", margin: "0 6px" }}>開始時</span>
                 <input type="number" min={0} max={100}
@@ -736,8 +739,8 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                     style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(16,185,129,0.2)", color: "#e2f5ec", fontSize: 15, fontWeight: 700, outline: "none", padding: "2px 4px", flex: 1, minWidth: 0 }} />
                   <button onClick={() => removePhase(phase.id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 18, opacity: 0.6, flexShrink: 0, lineHeight: 1 }}>×</button>
                 </div>
-                {/* 2行目：期間・入金方法・入金額・ボーナス */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+                <div style={{ display: "flex", flexDirection: isWide ? "row" : "column", flexWrap: "nowrap", gap: 12, alignItems: "flex-end" }}>
+                  {/* 期間・入金方法（常に同じ行） */}
                   <div style={{ display: "flex", flexWrap: "nowrap", gap: 12, alignItems: "flex-end" }}>
                     <div>
                       <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>期間</div>
@@ -766,39 +769,42 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>入金額</div>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                      <input type="number" min={0} max={3600}
-                        value={getDraft(phase.id, "amount", phase.amount)}
-                        onFocus={() => onFocusNum(phase.id, "amount", phase.amount)}
-                        onChange={e => onChangeNum(phase.id, "amount", e.target.value)}
-                        onBlur={e => onBlurNum(phase.id, "amount", e.target.value, 0)}
-                        style={numInput(64)} />
-                      <span style={{ fontSize: 12, color: "#6ee7b7" }}>万円</span>
-                    </div>
-                  </div>
-                  {showBonus && (
+                  {/* 入金額・ボーナス */}
+                  <div style={{ display: "flex", flexWrap: "nowrap", gap: 12, alignItems: "flex-end" }}>
                     <div>
-                      <div style={{ fontSize: 10, color: "#78350f", marginBottom: 4 }}>💰 ボーナス</div>
+                      <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>入金額</div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                        <input type="number" min={0} max={500}
-                          value={getDraft(phase.id, "bonusPerTime", phase.bonusPerTime || 0)}
-                          onFocus={() => onFocusNum(phase.id, "bonusPerTime", phase.bonusPerTime || 0)}
-                          onChange={e => onChangeNum(phase.id, "bonusPerTime", e.target.value)}
-                          onBlur={e => onBlurNum(phase.id, "bonusPerTime", e.target.value, 0)}
-                          style={{ ...numInput(52), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }} />
-                        <span style={{ fontSize: 12, color: "#fbbf24" }}>万円</span>
-                        <select value={phase.bonusTimes ?? 0} onChange={e => updatePhase(phase.id, "bonusTimes", e.target.value)}
-                          style={{ ...numInput(44), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }}>
-                          <option value={0}>0</option>
-                          <option value={1}>1</option>
-                          <option value={2}>2</option>
-                        </select>
-                        <span style={{ fontSize: 12, color: "#fbbf24" }}>回/年</span>
+                        <input type="number" min={0} max={3600}
+                          value={getDraft(phase.id, "amount", phase.amount)}
+                          onFocus={() => onFocusNum(phase.id, "amount", phase.amount)}
+                          onChange={e => onChangeNum(phase.id, "amount", e.target.value)}
+                          onBlur={e => onBlurNum(phase.id, "amount", e.target.value, 0)}
+                          style={numInput(52)} />
+                        <span style={{ fontSize: 12, color: "#6ee7b7" }}>万円</span>
                       </div>
                     </div>
-                  )}
+                    {showBonus && (
+                      <div>
+                        <div style={{ fontSize: 10, color: "#78350f", marginBottom: 4 }}>💰 ボーナス</div>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                          <input type="number" min={0} max={500}
+                            value={getDraft(phase.id, "bonusPerTime", phase.bonusPerTime || 0)}
+                            onFocus={() => onFocusNum(phase.id, "bonusPerTime", phase.bonusPerTime || 0)}
+                            onChange={e => onChangeNum(phase.id, "bonusPerTime", e.target.value)}
+                            onBlur={e => onBlurNum(phase.id, "bonusPerTime", e.target.value, 0)}
+                            style={{ ...numInput(52), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" }} />
+                          <span style={{ fontSize: 12, color: "#fbbf24" }}>万円</span>
+                          <select value={phase.bonusTimes ?? 0} onChange={e => updatePhase(phase.id, "bonusTimes", e.target.value)}
+                            style={{ ...numInput(38), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)", paddingRight: 2, paddingLeft: 4 }}>
+                            <option value={0}>0</option>
+                            <option value={1}>1</option>
+                            <option value={2}>2</option>
+                          </select>
+                          <span style={{ fontSize: 12, color: "#fbbf24" }}>回/年</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -823,7 +829,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                   onFocus={() => { if (Math.floor(coastMonths / 12) === 0) setCoastDraft(null); }}
                   onChange={e => setCoastDraft(e.target.value)}
                   onBlur={e => { const y = e.target.value === "" ? 0 : Math.max(0, Math.floor(Number(e.target.value)) || 0); setCoastMonths(y * 12 + (coastMonths % 12)); setCoastDraft(""); }}
-                  style={{ ...S.inputBase, ...S.inputPurple, fontWeight: 900, width: 56, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
+                  style={{ ...S.inputBase, ...S.inputPurple, fontWeight: 900, width: 40, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 13, color: "#a78bfa" }}>年</span>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
@@ -832,7 +838,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                   onFocus={() => { if (coastMonths % 12 === 0) setCoastMonthDraft(null); }}
                   onChange={e => setCoastMonthDraft(e.target.value)}
                   onBlur={e => { const m = e.target.value === "" ? 0 : Math.min(11, Math.max(0, Math.floor(Number(e.target.value)) || 0)); setCoastMonths(Math.floor(coastMonths / 12) * 12 + m); setCoastMonthDraft(""); }}
-                  style={{ ...S.inputBase, ...S.inputPurple, fontWeight: 900, width: 50, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
+                  style={{ ...S.inputBase, ...S.inputPurple, fontWeight: 900, width: 40, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 13, color: "#a78bfa" }}>ヶ月</span>
               </div>
             </div>
@@ -843,8 +849,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             </div>
           )}
         </div>
-      
-</div>
+
         {/* 年間利回り */}
         <div style={{ marginBottom: 22 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -852,7 +857,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
               <input type="number" min={0} max={15} step={0.5}
                 {...scalarInput(annualReturn, returnDraft, setReturnDraft, setAnnualReturn, returnFocused, setReturnFocused, 0, 15)}
-                style={{ ...S.inputBase, ...S.inputGreen, fontWeight: 900, width: 70, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
+                style={{ ...S.inputBase, ...S.inputGreen, fontWeight: 900, width: 56, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
               <span style={{ fontSize: 14, color: "#6ee7b7" }}>%</span>
             </div>
           </div>
@@ -907,7 +912,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
               <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
                 <input type="number" min={0} max={10} step={0.1}
                   {...scalarInput(inflationRate, inflationDraft, setInflationDraft, setInflationRate, inflationFocused, setInflationFocused, 0, 10)}
-                  style={{ ...S.inputBase, ...S.inputRed, fontWeight: 900, width: 70, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
+                  style={{ ...S.inputBase, ...S.inputRed, fontWeight: 900, width: 56, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 14, color: "#f87171" }}>%</span>
               </div>
             </div>
@@ -927,7 +932,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             )}
           </div>
         </div>
-
+      </div>
 
       {/* NISA超過バナー */}
       {hasTaxable && (
@@ -1175,6 +1180,16 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
 });
 
 // ── メインコンポーネント ──
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return width;
+}
+
 function AccordionItem({ title, content }) {
   const [open, setOpen] = useState(false);
   return (
