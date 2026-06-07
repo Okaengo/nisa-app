@@ -1,4 +1,8 @@
 import { useState, useMemo, useRef, useImperativeHandle, forwardRef, useEffect } from "react";
+
+const globalStyle = document.createElement("style");
+globalStyle.textContent = `input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; } input[type=number] { -moz-appearance: textfield; }`;
+document.head.appendChild(globalStyle);
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 
 const NISA_ANNUAL_LIMIT = 360;
@@ -582,7 +586,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const numInput = (w) => ({
     background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)",
     color: "#6ee7b7", fontSize: 16, fontWeight: 700, width: w,
-    borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none",
+    borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none", MozAppearance: "textfield",
   });
 
   return (
@@ -743,14 +747,14 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                           onChange={e => onChangeNum(phase.id, "years", e.target.value)}
                           onFocus={() => onFocusNum(phase.id, "years", phase.years ?? 0)}
                           onBlur={e => onBlurNum(phase.id, "years", e.target.value, 0)}
-                          style={numInput(44)} />
+                          style={numInput(36)} />
                         <span style={{ fontSize: 12, color: "#6ee7b7" }}>年</span>
                         <input type="number" min={0} max={11}
                           value={getDraft(phase.id, "months", phase.months ?? 0)}
                           onChange={e => onChangeNum(phase.id, "months", e.target.value)}
                           onFocus={() => onFocusNum(phase.id, "months", phase.months ?? 0)}
                           onBlur={e => onBlurNum(phase.id, "months", e.target.value, 0)}
-                          style={numInput(44)} />
+                          style={numInput(36)} />
                         <span style={{ fontSize: 12, color: "#6ee7b7" }}>ヶ月</span>
                       </div>
                     </div>
