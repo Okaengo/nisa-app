@@ -734,31 +734,33 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                 </div>
                 {/* 2行目：期間・入金方法・入金額・ボーナス */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-                  <div>
-                    <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>期間</div>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                      <input type="number" min={0} max={99}
-                        value={getDraft(phase.id, "years", phase.years ?? 0)}
-                        onChange={e => onChangeNum(phase.id, "years", e.target.value)}
-                        onFocus={() => onFocusNum(phase.id, "years", phase.years ?? 0)}
-                        onBlur={e => onBlurNum(phase.id, "years", e.target.value, 0)}
-                        style={numInput(44)} />
-                      <span style={{ fontSize: 12, color: "#6ee7b7" }}>年</span>
-                      <input type="number" min={0} max={11}
-                        value={getDraft(phase.id, "months", phase.months ?? 0)}
-                        onChange={e => onChangeNum(phase.id, "months", e.target.value)}
-                        onFocus={() => onFocusNum(phase.id, "months", phase.months ?? 0)}
-                        onBlur={e => onBlurNum(phase.id, "months", e.target.value, 0)}
-                        style={numInput(44)} />
-                      <span style={{ fontSize: 12, color: "#6ee7b7" }}>ヶ月</span>
+                  <div style={{ display: "flex", flexWrap: "nowrap", gap: 12, alignItems: "flex-end" }}>
+                    <div>
+                      <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>期間</div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                        <input type="number" min={0} max={99}
+                          value={getDraft(phase.id, "years", phase.years ?? 0)}
+                          onChange={e => onChangeNum(phase.id, "years", e.target.value)}
+                          onFocus={() => onFocusNum(phase.id, "years", phase.years ?? 0)}
+                          onBlur={e => onBlurNum(phase.id, "years", e.target.value, 0)}
+                          style={numInput(44)} />
+                        <span style={{ fontSize: 12, color: "#6ee7b7" }}>年</span>
+                        <input type="number" min={0} max={11}
+                          value={getDraft(phase.id, "months", phase.months ?? 0)}
+                          onChange={e => onChangeNum(phase.id, "months", e.target.value)}
+                          onFocus={() => onFocusNum(phase.id, "months", phase.months ?? 0)}
+                          onBlur={e => onBlurNum(phase.id, "months", e.target.value, 0)}
+                          style={numInput(44)} />
+                        <span style={{ fontSize: 12, color: "#6ee7b7" }}>ヶ月</span>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>入金方法</div>
-                    <select value={phase.method || "monthly"} onChange={e => updatePhase(phase.id, "method", e.target.value)}
-                      style={{ ...numInput(130), textAlign: "left" }}>
-                      {CONTRIB_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                    </select>
+                    <div>
+                      <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>入金方法</div>
+                      <select value={phase.method || "monthly"} onChange={e => updatePhase(phase.id, "method", e.target.value)}
+                        style={{ ...numInput(130), textAlign: "left" }}>
+                        {CONTRIB_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>入金額</div>
