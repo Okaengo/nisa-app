@@ -1435,7 +1435,7 @@ export default function NisaSimulator() {
               title: "憧れのFIRE生活",
               content: <>
                 <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIREとは、Financial Independence, Retire Earlyの略、つまり経済的自立によって早期退職を実現するライフスタイルです。FIREを達成するためにまず決めることは、FIRE後に月いくらで生活するかと、何%で取り崩すかの2つです。このシミュレーターではその必要資産額を自動計算し、今のプランで何年何月に達成できるかを確認できます。</p>
-                <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIRE後の生活費は人によって大きく異なります。完全にリタイアする場合はもちろん、パートや副業で少し収入を得ながら資産を取り崩すサイドFIREやバリスタFIREという選択肢もあります。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIRE後の生活費は人によって大きく異なります。完全にリタイアする場合もあれば、パートや副業で少し収入を得ながら資産を取り崩すサイドFIREやバリスタFIREという選択肢もあります。</p>
                 <p style={{ color: "#d1d5db", marginBottom: 16 }}>取り崩し率は一般的に4%ルール（トリニティスタディ）が知られていますが、安全重視なら3〜3.5%、物価の安い国への移住を前提にするなら5〜6%と調整できます。</p>
                 <p style={{ color: "#d1d5db", marginBottom: 16 }}>自分がどんな生活を送りたいかをイメージしながら生活費や取り崩し率を考えてみてください。</p>
               </>
