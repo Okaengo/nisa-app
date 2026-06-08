@@ -1,9 +1,9 @@
 import { useState, useMemo, useRef, useImperativeHandle, forwardRef, useEffect } from "react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 
 const globalStyle = document.createElement("style");
 globalStyle.textContent = `input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; } input[type=number] { -moz-appearance: textfield; }`;
 document.head.appendChild(globalStyle);
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 
 const NISA_ANNUAL_LIMIT = 360;
 const NISA_LIFETIME_LIMIT = 1800;
