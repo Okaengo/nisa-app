@@ -78,6 +78,7 @@ const INITIAL_SIM_STATE = {
   fireTargetYear: 0,
   fireTargetMonth: 1,
   fillPanel: null,
+  showBonus: true,
 };
 
 function formatMan(value) {
@@ -131,7 +132,7 @@ function runSim(state) {
       const totalPhaseMonths = (phase.years || 0) * 12 + (phase.months || 0);
       if (totalPhaseMonths <= 0) continue;
       const perAmount = phase.amount || 0;
-      const bonusPerTime = phase.bonusPerTime || 0;
+      const bonusPerTime = (state.showBonus !== false) ? (phase.bonusPerTime || 0) : 0;
       const bSet = bonusMonthSet(phase.bonusTimes || 0);
       const monthContribs = monthlyContribArray(perAmount, phase.method);
 
@@ -444,7 +445,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const setAnnualReturn  = (v)  => pushHistory({ annualReturn: v });
   const setAnnualRisk    = (v)  => pushHistory({ annualRisk: v });
   const setInflationRate = (v)  => pushHistory({ inflationRate: v });
-  const setCoastMonths   = (v)  => pushHistory({ coastMonths: v });
+  const setCoastMonths   = (v)  => { setWorking(null); pushHistory({ coastMonths: v }); };
   const setStartMonth    = (v)  => pushHistory({ startMonth: v });
   const setStartYear     = (v)  => pushHistory({ startYear: v });
   const setStartAge      = (v)  => pushHistory({ startAge: v });
@@ -460,7 +461,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const slideRisk      = (v) => setWorking(w => ({ ...current, ...w, annualRisk: v }));
   const slideInflation = (v) => setWorking(w => ({ ...current, ...w, inflationRate: v }));
 
-  const [showBonus, setShowBonus] = useState(true);
+  const showBonus     = current.showBonus ?? true;
   const [showDetail, setShowDetail] = useState(false);
   const [drafts, setDrafts] = useState({});
   const getDraft = (id, field, fallback) => {
@@ -487,8 +488,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const [returnDraft, setReturnDraft] = useState("");
   const [riskDraft, setRiskDraft] = useState("");
   const [inflationDraft, setInflationDraft] = useState("");
-  const [coastDraft, setCoastDraft] = useState("");
-  const [coastMonthDraft, setCoastMonthDraft] = useState("");
   const [returnFocused, setReturnFocused] = useState(false);
   const [riskFocused, setRiskFocused] = useState(false);
   const [inflationFocused, setInflationFocused] = useState(false);
@@ -701,7 +700,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
               borderRadius: 8, padding: "4px 12px", cursor: "pointer",
               color: useStartDate ? "#6ee7b7" : "#4b5563", fontSize: 11, fontWeight: useStartDate ? 700 : 400,
             }}>開始年月・年齢 {useStartDate ? "ON" : "OFF"}</button>
-            <button onClick={() => setShowBonus(b => !b)} style={{ background: showBonus ? "rgba(251,191,36,0.15)" : "rgba(16,185,129,0.08)", border: `1px solid ${showBonus ? "rgba(251,191,36,0.4)" : "rgba(16,185,129,0.2)"}`, borderRadius: 6, color: showBonus ? "#fbbf24" : "#6ee7b7", fontSize: 11, padding: "4px 12px", cursor: "pointer" }}>💰 ボーナス {showBonus ? "非表示" : "表示"}</button>
+            <button onClick={() => pushHistory({ showBonus: !showBonus })} style={{ background: showBonus ? "rgba(251,191,36,0.15)" : "rgba(16,185,129,0.08)", border: `1px solid ${showBonus ? "rgba(251,191,36,0.4)" : "rgba(16,185,129,0.2)"}`, borderRadius: 6, color: showBonus ? "#fbbf24" : "#6ee7b7", fontSize: 11, padding: "4px 12px", cursor: "pointer" }}>💰 ボーナス {showBonus ? "非表示" : "表示"}</button>
           </div>
 
           {/* 開始年月・年齢 */}
@@ -845,29 +844,24 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap", whiteSpace: "nowrap" }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
                 <input type="number" min={0} max={600}
-                  value={coastDraft === null ? "" : coastDraft !== "" ? coastDraft : Math.floor(coastMonths / 12)}
-                  onFocus={() => { if (Math.floor(coastMonths / 12) === 0) setCoastDraft(null); }}
-                  onChange={e => setCoastDraft(e.target.value)}
-                  onBlur={e => { const y = e.target.value === "" ? 0 : Math.max(0, Math.floor(Number(e.target.value)) || 0); setCoastMonths(y * 12 + (coastMonths % 12)); setCoastDraft(""); }}
-                  style={{ ...S.inputBase, ...S.inputPurple, fontWeight: 900, width: 72, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
+                  value={"coast_years" in drafts ? drafts["coast_years"] : Math.floor(coastMonths / 12)}
+                  onFocus={() => { if (Math.floor(coastMonths / 12) === 0) setDrafts(d => ({ ...d, coast_years: "" })); }}
+                  onChange={e => setDrafts(d => ({ ...d, coast_years: e.target.value }))}
+                  onBlur={e => { const y = e.target.value === "" ? 0 : Math.max(0, Math.floor(Number(e.target.value)) || 0); setDrafts(d => { const n = { ...d }; delete n["coast_years"]; return n; }); setCoastMonths(y * 12 + (coastMonths % 12)); }}
+                  style={{ ...S.inputBase, ...S.inputPurple, fontWeight: 900, width: 40, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 13, color: "#a78bfa" }}>年</span>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
                 <input type="number" min={0} max={11}
-                  value={coastMonthDraft === null ? "" : coastMonthDraft !== "" ? coastMonthDraft : coastMonths % 12}
-                  onFocus={() => { if (coastMonths % 12 === 0) setCoastMonthDraft(null); }}
-                  onChange={e => setCoastMonthDraft(e.target.value)}
-                  onBlur={e => { const m = e.target.value === "" ? 0 : Math.min(11, Math.max(0, Math.floor(Number(e.target.value)) || 0)); setCoastMonths(Math.floor(coastMonths / 12) * 12 + m); setCoastMonthDraft(""); }}
-                  style={{ ...S.inputBase, ...S.inputPurple, fontWeight: 900, width: 72, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
+                  value={"coast_months" in drafts ? drafts["coast_months"] : coastMonths % 12}
+                  onFocus={() => { if (coastMonths % 12 === 0) setDrafts(d => ({ ...d, coast_months: "" })); }}
+                  onChange={e => setDrafts(d => ({ ...d, coast_months: e.target.value }))}
+                  onBlur={e => { const m = e.target.value === "" ? 0 : Math.min(11, Math.max(0, Math.floor(Number(e.target.value)) || 0)); setDrafts(d => { const n = { ...d }; delete n["coast_months"]; return n; }); setCoastMonths(Math.floor(coastMonths / 12) * 12 + m); }}
+                  style={{ ...S.inputBase, ...S.inputPurple, fontWeight: 900, width: 40, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 13, color: "#a78bfa" }}>ヶ月</span>
               </div>
             </div>
           </div>
-          {coastMonths > 0 && summary.balanceAtCoastStart > 0 && (
-            <div style={{ fontSize: 11, color: "#c4b5fd", fontWeight: 700 }}>
-              放置開始時 {formatMan(summary.balanceAtCoastStart)} → {periodLabel(Math.floor(coastMonths/12), coastMonths%12)}後 {formatMan(summary.finalBalance)}（＋{formatMan(summary.coastGrowth)}）
-            </div>
-          )}
         </div>
 
         {/* 年間利回り */}
