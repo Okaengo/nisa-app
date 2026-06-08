@@ -991,7 +991,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
               <linearGradient id="gCost"  x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#475569" stopOpacity={0.4}  /><stop offset="100%" stopColor="#475569" stopOpacity={0.02} /></linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.07)" />
-            <XAxis dataKey="actualYear" stroke="#10b981" tick={{ fontSize: 11, fill: "#6ee7b7" }} tickFormatter={v => `${v}年`} />
+            <XAxis dataKey={useStartDate ? "actualYear" : "x"} stroke="#10b981" tick={{ fontSize: 11, fill: "#6ee7b7" }} tickFormatter={v => useStartDate ? `${v}年` : `${v}年目`} tickCount={Math.ceil(totalMonths / 12 / 5) + 1} interval={0} ticks={useStartDate ? undefined : Array.from({ length: Math.ceil(totalMonths / 12 / 5) + 1 }, (_, i) => i * 5).filter(v => v <= Math.ceil(totalMonths / 12))} />
             <YAxis stroke="#10b981" tick={{ fontSize: 11, fill: "#6ee7b7" }} tickFormatter={v => v >= 10000 ? `${(v/10000).toFixed(0)}億` : `${v}万`} />
             <Tooltip content={<CustomTooltip coastStartMonth={coastStartMonth} />} />
             <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
