@@ -510,7 +510,13 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const updatePhase = (id, field, value) =>
     setPhases(ps => ps.map(p => p.id === id ? { ...p, [field]: field === "label" || field === "method" ? value : Number(value) } : p));
   const addPhase = () => setPhases(ps => [...ps, { id: Date.now(), label: `フェーズ${ps.length + 1}`, amount: 0, method: "monthly", bonusPerTime: 0, bonusTimes: 0, years: 0, months: 0 }]);
-  const removePhase = (id) => { if (phases.length > 1) setPhases(ps => ps.filter(p => p.id !== id)); };
+  const removePhase = (id) => {
+    if (phases.length === 1) {
+      setPhases([{ id: Date.now(), label: "フェーズ1", years: 0, months: 0, amount: 0, method: "monthly", bonusPerTime: 0, bonusTimes: 0 }]);
+    } else {
+      setPhases(ps => ps.filter(p => p.id !== id));
+    }
+  };
 
   const calcFillProposal = (row, years) => {
     if (!years || years <= 0 || !row || row.NISA残枠 <= 0) return [];
