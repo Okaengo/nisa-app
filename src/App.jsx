@@ -65,7 +65,6 @@ const DEFAULT_PHASES = [
 const INITIAL_SIM_STATE = {
   phases: DEFAULT_PHASES,
   annualReturn: 0,
-  annualRisk: 0,
   inflationRate: 0,
   coastMonths: 0,
   startMonth: 1,
@@ -78,7 +77,7 @@ const INITIAL_SIM_STATE = {
   fireTargetYear: 0,
   fireTargetMonth: 1,
   fillPanel: null,
-  showBonus: true,
+  showBonus: false,
 };
 
 function formatMan(value) {
@@ -117,12 +116,12 @@ function CustomTooltip({ active, payload, label, coastStartMonth }) {
 
 // ── シミュレーション本体（純粋関数） ──
 function runSim(state) {
-  const { phases, annualReturn, annualRisk, inflationRate, coastMonths, startMonth, startYear, useStartDate } = state;
+  const { phases, annualReturn, inflationRate, coastMonths, startMonth, startYear, useStartDate } = state;
   const sYear = useStartDate ? (startYear || new Date().getFullYear()) : 2000;
   const sMonth = useStartDate ? (startMonth || 1) : 1;
 
   function simulate(rate) {
-    const realRate = rate - inflationRate;
+    const realRate = ((1 + rate / 100) / (1 + inflationRate / 100) - 1) * 100;
     const monthlyRate = realRate / 100 / 12;
     let nisaBalance = 0, taxableBalance = 0, taxableCost = 0, nisaUsed = 0, nisaUsedThisYear = 0, totalInvested = 0;
     const data = [];
@@ -206,8 +205,6 @@ function runSim(state) {
   }
 
   const { data, coastStart } = simulate(annualReturn);
-  const bestData  = annualRisk > 0 ? simulate(annualReturn + annualRisk).data : null;
-  const worstData = annualRisk > 0 ? simulate(annualReturn - annualRisk).data : null;
 
   const isYearEnd = (d) => d.calendarMonth === 12 || d === data[data.length - 1];
   const yearlyIndices = [];
@@ -220,8 +217,6 @@ function runSim(state) {
     const actualYear = sYear + d.calendarYear;
     const yearLabel = d.calendarYear - startCalendarYear + 1;
     const row = { ...d, x: yearLabel, actualYear, 中央値: d.資産総額_税引前 };
-    if (bestData && bestData[idx]) row["最良ケース"] = bestData[idx].資産総額_税引前;
-    if (worstData && worstData[idx]) row["最悪ケース"] = worstData[idx].資産総額_税引前;
     return row;
   });
 
@@ -243,8 +238,6 @@ function runSim(state) {
       totalTax: last.税額 || 0,
       balanceAtCoastStart,
       coastGrowth: (last.資産総額_税引前 || 0) - balanceAtCoastStart,
-      bestFinal: bestData ? (bestData[bestData.length - 1]?.資産総額_税引前 || 0) : 0,
-      worstFinal: worstData ? (worstData[worstData.length - 1]?.資産総額_税引前 || 0) : 0,
     },
   };
 }
@@ -386,7 +379,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const current = history[historyIdx];
   const phases        = current.phases;
   const annualReturn  = working?.annualReturn  ?? current.annualReturn;
-  const annualRisk    = working?.annualRisk    ?? current.annualRisk;
   const inflationRate = working?.inflationRate ?? current.inflationRate;
   const coastMonths   = working?.coastMonths   ?? current.coastMonths;
   const startMonth    = current.startMonth;
@@ -443,7 +435,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
 
   const setPhases        = (fn) => pushHistory({ phases: typeof fn === "function" ? fn(phases) : fn });
   const setAnnualReturn  = (v)  => pushHistory({ annualReturn: v });
-  const setAnnualRisk    = (v)  => pushHistory({ annualRisk: v });
   const setInflationRate = (v)  => pushHistory({ inflationRate: v });
   const setCoastMonths   = (v)  => { setWorking(null); pushHistory({ coastMonths: v }); };
   const setStartMonth    = (v)  => pushHistory({ startMonth: v });
@@ -458,7 +449,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const setFillPanel     = (v)  => pushHistory({ fillPanel: typeof v === "function" ? v(fillPanel) : v });
 
   const slideReturn    = (v) => setWorking(w => ({ ...current, ...w, annualReturn: v }));
-  const slideRisk      = (v) => setWorking(w => ({ ...current, ...w, annualRisk: v }));
   const slideInflation = (v) => setWorking(w => ({ ...current, ...w, inflationRate: v }));
 
   const showBonus     = current.showBonus ?? true;
@@ -486,10 +476,8 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const [startAgeDraft, setStartAgeDraft] = useState("");
   const [startAgeFocused, setStartAgeFocused] = useState(false);
   const [returnDraft, setReturnDraft] = useState("");
-  const [riskDraft, setRiskDraft] = useState("");
   const [inflationDraft, setInflationDraft] = useState("");
   const [returnFocused, setReturnFocused] = useState(false);
-  const [riskFocused, setRiskFocused] = useState(false);
   const [inflationFocused, setInflationFocused] = useState(false);
   const [fillYearsDraft, setFillYearsDraft] = useState("");
   const [fillYearsFocused, setFillYearsFocused] = useState(false);
@@ -700,7 +688,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
               borderRadius: 8, padding: "4px 12px", cursor: "pointer",
               color: useStartDate ? "#6ee7b7" : "#4b5563", fontSize: 11, fontWeight: useStartDate ? 700 : 400,
             }}>開始年月・年齢 {useStartDate ? "ON" : "OFF"}</button>
-            <button onClick={() => pushHistory({ showBonus: !showBonus })} style={{ background: showBonus ? "rgba(251,191,36,0.15)" : "rgba(16,185,129,0.08)", border: `1px solid ${showBonus ? "rgba(251,191,36,0.4)" : "rgba(16,185,129,0.2)"}`, borderRadius: 6, color: showBonus ? "#fbbf24" : "#6ee7b7", fontSize: 11, padding: "4px 12px", cursor: "pointer" }}>💰 ボーナス {showBonus ? "非表示" : "表示"}</button>
+            <button onClick={() => pushHistory({ showBonus: !showBonus })} style={{ background: showBonus ? "rgba(251,191,36,0.15)" : "rgba(16,185,129,0.08)", border: `1px solid ${showBonus ? "rgba(251,191,36,0.4)" : "rgba(16,185,129,0.2)"}`, borderRadius: 6, color: showBonus ? "#fbbf24" : "#6ee7b7", fontSize: 11, padding: "4px 12px", cursor: "pointer" }}>💰 賞与・ボーナス投資 {showBonus ? "ON" : "OFF"}</button>
           </div>
 
           {/* 開始年月・年齢 */}
@@ -885,36 +873,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
           </div>
         </div>
 
-        {/* 想定リスク */}
-        <div style={{ marginBottom: 22 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div>
-              <div style={{ fontSize: 13, color: "#a7f3d0" }}>想定リスク</div>
-              <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>0%の場合はリスク非表示、入力するとグラフに<br />3本線で表示されます。</div>
-            </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
-              <input type="number" min={0} max={50} step={0.5}
-                {...scalarInput(annualRisk, riskDraft, setRiskDraft, setAnnualRisk, riskFocused, setRiskFocused, 0, 50)}
-                style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24", fontSize: 16, fontWeight: 900, width: 70, borderRadius: 6, padding: "2px 6px", textAlign: "right", outline: "none" }} />
-              <span style={{ fontSize: 14, color: "#fbbf24" }}>%</span>
-            </div>
-          </div>
-          <input type="range" min={0} max={50} step={0.5} value={annualRisk}
-            onChange={e => { slideRisk(Number(e.target.value)); setRiskDraft(""); }}
-            onMouseUp={e => setAnnualRisk(Number(e.target.value))}
-            onTouchEnd={e => setAnnualRisk(Number(e.target.value))}
-            style={{ width: "100%", accentColor: "#f59e0b" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#78350f", marginTop: 4 }}>
-            <span>オルカン・S&amp;P500：15〜20%</span><span>先進国株式：15〜17%</span>
-          </div>
-          <div style={{ fontSize: 10, color: "#78350f", marginTop: 2 }}>新興国株式：20〜25%</div>
-          {annualRisk > 0 && (
-            <div style={{ marginTop: 8, fontSize: 11, color: "#fbbf24", lineHeight: 1.8 }}>
-              最良ケース：年率 <strong>{annualReturn + annualRisk}%</strong>　／　中央値：年率 <strong>{annualReturn}%</strong>　／　最悪ケース：年率 <strong>{annualReturn - annualRisk}%</strong>
-            </div>
-          )}
-        </div>
-
         {/* インフレ率・開始月 */}
         <div style={{ display: "flex", gap: 16, marginBottom: 22, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 200 }}>
@@ -940,8 +898,8 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             </div>
             {inflationRate > 0 && (
               <div style={{ marginTop: 6, fontSize: 11, color: "#f87171" }}>
-                実質利回り：<strong>{(annualReturn - inflationRate).toFixed(1)}%</strong>
-                {annualRisk > 0 && <>　最良：<strong>{(annualReturn + annualRisk - inflationRate).toFixed(1)}%</strong>　最悪：<strong>{(annualReturn - annualRisk - inflationRate).toFixed(1)}%</strong></>}
+                実質利回り：<strong>{(((1 + annualReturn / 100) / (1 + inflationRate / 100) - 1) * 100).toFixed(1)}%</strong>
+                
               </div>
             )}
           </div>
@@ -967,13 +925,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
       <div style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.1)", borderRadius: 16, padding: "22px 8px 14px", marginBottom: 22 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginLeft: 16, marginBottom: 14, flexWrap: "wrap" }}>
           <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 3 }}>資産推移グラフ（年次）</div>
-          {annualRisk > 0 && (
-            <div style={{ display: "flex", gap: 14, fontSize: 10 }}>
-              <span style={{ color: "#60a5fa" }}>▲ 最良（+{annualRisk}%）</span>
-              <span style={{ color: "#6ee7b7" }}>━ 中央値</span>
-              <span style={{ color: "#f87171" }}>▼ 最悪（-{annualRisk}%）</span>
-            </div>
-          )}
           {coastStartMonth && <div style={{ fontSize: 10, color: "#a78bfa" }}>🌙 放置期間</div>}
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -991,9 +942,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
             {coastStartMonth && <ReferenceLine x={coastStartMonth} stroke="#a78bfa" strokeDasharray="5 3" strokeWidth={1.5} label={{ value: "🌙 放置開始", position: "top", fontSize: 10, fill: "#a78bfa" }} />}
             <Area type="monotone" dataKey="投資元本" stroke="#64748b" strokeWidth={1.5} fill="url(#gCost)" strokeDasharray="4 2" />
-            {annualRisk > 0 && <Area type="monotone" dataKey="最良ケース" stroke="#60a5fa" strokeWidth={1.5} fill="url(#gBest)" strokeDasharray="3 2" dot={false} />}
             <Area type="monotone" dataKey="中央値" stroke="#6ee7b7" strokeWidth={2.5} fill="url(#gMid)" dot={false} />
-            {annualRisk > 0 && <Area type="monotone" dataKey="最悪ケース" stroke="#f87171" strokeWidth={1.5} fill="url(#gWorst)" strokeDasharray="3 2" dot={false} />}
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -1465,6 +1414,13 @@ export default function NisaSimulator() {
                 <p style={{ color: "#d1d5db", marginBottom: 16 }}>多くの積み立てシミュレーターは、毎月同じ金額を積み立て続けることを前提に作られています。しかし実際には、就職・昇給・結婚など、ライフステージによって投資に使えるお金は常に変化します。</p>
                 <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターでは、そうした現実の人生設計に合わせて積立額や期間を段階ごとに自由に変えられます。NISA枠を超えた分の税金は自動で計算するので、「いつ・いくら積み立てるか」という部分に集中できます。</p>
                 <p style={{ color: "#d1d5db", marginBottom: 16 }}>FIRE目標の達成年月の確認、積み立てを止めて運用だけ続ける放置期間（コーストFIRE）、NISA満額調整などの機能も備えています。自分のライフプランを思い浮かべながら、自由に試してみてください。</p>
+              </>
+            },
+            {
+              title: "グラフ通りにはいかない投資のリアル",
+              content: <>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>このシミュレーターのグラフは、設定した利回りが毎年一定で続いた場合の値です。実際の市場はプラスになる年もマイナスになる年もあり、大きく変動しながらその平均リターンが利回りに近づいていくので、グラフ通りに推移することはほとんどありません。数年単位で大きく下がることもありますが、それでも上がるのを落ち着いて待てるのが長期積み立て投資の強みです。</p>
+                <p style={{ color: "#d1d5db", marginBottom: 16 }}>下がったタイミングで焦って売ってしまうと、その時点で損失が確定します。これを「狼狽売り」といい、長期投資で1番多い失敗パターンです。一方、「損切り」とは、主に個別株投資であらかじめ決めたルール（例：7%下がったら売るなど）に基づいて計画的に売ることです。個別株は企業が倒産すれば価値がゼロになるリスクがあるため、損切りはそのための命綱です。インデックス投資は市場全体に分散投資しているため、ゼロになることはなく絶対損切りしてはいけません。狼狽売りを損切りと混同し「冷静に判断できている」と思い込んで、一時の下落で売ってしまうと、未来の数百万を失うことになります。</p>
               </>
             },
             {
