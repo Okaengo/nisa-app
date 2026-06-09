@@ -588,7 +588,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const dynInput = (val, base = {}) => {
     const str = String(val || 0);
     const dots = (str.match(/\./g) || []).length;
-    const nonDots = str.replace(/[-\.]/g, '').length;
+    const nonDots = str.replace(/[-.]/g, '').length;
     const chars = Math.max(1, nonDots + dots * 0.5);
     const width = chars * 12 + 14;
     return {
@@ -1170,8 +1170,6 @@ function useWindowWidth() {
 }
 
 export default function NisaSimulator() {
-  const windowWidth = useWindowWidth();
-  const isWide = windowWidth > 600;
   const [plans, setPlans] = useState([{ id: 1, name: "プランA" }]);
   const [planInitialStates, setPlanInitialStates] = useState({});
   const [planStates, setPlanStates] = useState({}); // 各プランの現在のstate
