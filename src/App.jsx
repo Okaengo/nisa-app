@@ -758,14 +758,14 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                           onFocus={() => onFocusNum(phase.id, "years", phase.years ?? 0)}
                           onBlur={e => onBlurNum(phase.id, "years", e.target.value, 0)}
                           style={dynInput(getDraft(phase.id, "years", phase.years ?? 0))} />
-                        <span style={{ fontSize: 12, color: "#6ee7b7" }}>年</span>
+                        <span style={{ fontSize: 12, color: "#6ee7b7", whiteSpace: "nowrap" }}>年</span>
                         <input type="number" min={0} max={11}
                           value={getDraft(phase.id, "months", phase.months ?? 0)}
                           onChange={e => onChangeNum(phase.id, "months", e.target.value)}
                           onFocus={() => onFocusNum(phase.id, "months", phase.months ?? 0)}
                           onBlur={e => onBlurNum(phase.id, "months", e.target.value, 0)}
                           style={dynInput(getDraft(phase.id, "months", phase.months ?? 0))} />
-                        <span style={{ fontSize: 12, color: "#6ee7b7" }}>ヶ月</span>
+                        <span style={{ fontSize: 12, color: "#6ee7b7", whiteSpace: "nowrap" }}>ヶ月</span>
                       </div>
                     </div>
                     <div>
@@ -787,7 +787,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                           onChange={e => onChangeNum(phase.id, "amount", e.target.value)}
                           onBlur={e => onBlurNum(phase.id, "amount", e.target.value, 0)}
                           style={dynInput(getDraft(phase.id, "amount", phase.amount))} />
-                        <span style={{ fontSize: 12, color: "#6ee7b7" }}>万円</span>
+                        <span style={{ fontSize: 12, color: "#6ee7b7", whiteSpace: "nowrap" }}>万円</span>
                       </div>
                     </div>
                     {showBonus && (
@@ -800,14 +800,14 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                             onChange={e => onChangeNum(phase.id, "bonusPerTime", e.target.value)}
                             onBlur={e => onBlurNum(phase.id, "bonusPerTime", e.target.value, 0)}
                             style={dynInput(getDraft(phase.id, "bonusPerTime", phase.bonusPerTime || 0), { color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)" })} />
-                          <span style={{ fontSize: 12, color: "#fbbf24" }}>万円</span>
+                          <span style={{ fontSize: 12, color: "#fbbf24", whiteSpace: "nowrap" }}>万円</span>
                           <select value={phase.bonusTimes ?? 0} onChange={e => updatePhase(phase.id, "bonusTimes", e.target.value)}
                             style={{ ...numInput(38), color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)", paddingRight: 2, paddingLeft: 4 }}>
                             <option value={0}>0</option>
                             <option value={1}>1</option>
                             <option value={2}>2</option>
                           </select>
-                          <span style={{ fontSize: 12, color: "#fbbf24" }}>回/年</span>
+                          <span style={{ fontSize: 12, color: "#fbbf24", whiteSpace: "nowrap" }}>回/年</span>
                         </div>
                       </div>
                     )}
