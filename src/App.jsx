@@ -574,7 +574,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
   const isWide = windowWidth > 600;
 
   const simResult = useMemo(() => runSim(current), [current]);
-  const { chartData, monthlyData, summary, coastStartMonth, hasTaxable } = simResult;
+  const { chartData, monthlyData, coastStartMonth, hasTaxable } = simResult;
 
   const totalInvestMonths = phases.reduce((s, p) => s + (p.years || 0) * 12 + (p.months || 0), 0);
   const totalMonths = totalInvestMonths + coastMonths;
