@@ -31,17 +31,15 @@ const S = {
 
 const CONTRIB_METHODS = [
   { value: "monthly",   label: "毎月積み立て" },
-  { value: "lump_jan",  label: "年始一括（1月）" },
-  { value: "lump_apr",  label: "年度始一括（4月）" },
+  { value: "lump_jan",  label: "年1回一括" },
   { value: "quarterly", label: "四半期ごと（3ヶ月に1回）" },
 ];
 
-function monthlyContribArray(perAmount, method) {
+function monthlyContribArray(perAmount, method, sMonth = 1) {
   const arr = new Array(12).fill(0);
   if (perAmount <= 0) return arr;
   switch (method) {
     case "lump_jan":  arr[0] = perAmount; break;
-    case "lump_apr":  arr[3] = perAmount; break;
     case "quarterly": [0,3,6,9].forEach(m => { arr[m] = perAmount; }); break;
     default:          arr.forEach((_, i) => { arr[i] = perAmount; }); break;
   }
@@ -51,8 +49,7 @@ function monthlyContribArray(perAmount, method) {
 function toAnnual(perAmount, method) {
   if (!perAmount) return 0;
   switch (method) {
-    case "lump_jan":
-    case "lump_apr":  return perAmount;
+    case "lump_jan":  return perAmount;
     case "quarterly": return perAmount * 4;
     default:          return perAmount * 12;
   }
@@ -64,7 +61,7 @@ const DEFAULT_PHASES = [
 
 const INITIAL_SIM_STATE = {
   phases: DEFAULT_PHASES,
-  annualReturn: 0,
+  annualReturn: 7,
   inflationRate: 0,
   coastMonths: 0,
   startMonth: 1,
@@ -133,13 +130,13 @@ function runSim(state) {
       const perAmount = phase.amount || 0;
       const bonusPerTime = (state.showBonus !== false) ? (phase.bonusPerTime || 0) : 0;
       const bSet = bonusMonthSet(phase.bonusTimes || 0);
-      const monthContribs = monthlyContribArray(perAmount, phase.method);
+      const monthContribs = monthlyContribArray(perAmount, phase.method, sMonth);
 
       for (let pm = 0; pm < totalPhaseMonths; pm++) {
         const totalMonthIndex = data.length;
-        const monthOfYear = totalMonthIndex % 12;
         const calendarMonth = ((sMonth - 1 + totalMonthIndex) % 12) + 1;
         const calendarYear = Math.floor((sMonth - 1 + totalMonthIndex) / 12);
+        const monthOfYear = calendarMonth - 1;
         const isNewYear = calendarMonth === 1 && totalMonthIndex > 0;
         if (isNewYear) nisaUsedThisYear = 0;
 
@@ -249,26 +246,28 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
   const annualAmount = monthlyAmount * 12;
   const required = withdrawalRate > 0 ? Math.round(annualAmount / (withdrawalRate / 100)) : 0;
 
-  let targetRow, label;
-  if (targetYear > 0 && useStartDate && monthlyData) {
-    const last = monthlyData[monthlyData.length - 1];
-    const exactRow = monthlyData.find(d => d.actualYear === targetYear && d.calendarMonth >= targetMonth)
-      ?? monthlyData.find(d => d.actualYear > targetYear);
-    const isOver = !exactRow;
+  let targetRow, label, isOverPeriod = false;
+  const lastMonthlyRow = monthlyData?.[monthlyData.length - 1];
+  const lastChartRow = chartData[chartData.length - 1];
+
+  if (useStartDate && monthlyData) {
+    const last = lastMonthlyRow;
+    const searchYear = targetYear > 0 ? targetYear : last?.actualYear;
+    const searchMonth = targetYear > 0 ? targetMonth : (targetMonth > 0 ? targetMonth : last?.calendarMonth);
+    const exactRow = monthlyData.find(d => d.actualYear === searchYear && d.calendarMonth === searchMonth)
+      ?? monthlyData.find(d => d.actualYear === searchYear && d.calendarMonth > searchMonth)
+      ?? monthlyData.find(d => d.actualYear > searchYear);
+    isOverPeriod = targetYear > 0 && !exactRow;
     targetRow = exactRow ?? last;
-    label = isOver
-      ? `最終時点（目標期間がシミュレーション期間を超えています）`
-      : `${targetRow.actualYear}年${targetRow.calendarMonth}月時点`;
+    label = `${targetRow?.actualYear}年${targetRow?.calendarMonth}月時点`;
   } else if (targetYear > 0) {
-    const last = chartData[chartData.length - 1];
+    const last = lastChartRow;
     const row = chartData.find(d => d.x >= targetYear);
-    const isOver = !row;
+    isOverPeriod = !row;
     targetRow = row ?? last;
-    label = isOver
-      ? `最終時点（目標期間がシミュレーション期間を超えています）`
-      : `${targetRow.x}年目時点`;
+    label = isOverPeriod ? "最終時点" : `${targetRow.x}年目時点`;
   } else {
-    targetRow = chartData[chartData.length - 1];
+    targetRow = lastChartRow;
     label = "最終時点";
   }
 
@@ -320,11 +319,12 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
       <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start", marginBottom: achieved ? 0 : 12 }}>
         <div>
           <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>FIRE必要資産（{withdrawalRate}%取り崩し）</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{required > 0 ? `${required.toLocaleString()}万円` : "—"}</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#34d399" }}>{required > 0 ? `${required.toLocaleString()}万円` : "—"}</div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>{label}の税引後手取り</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: "#6ee7b7" }}>{balanceAtTarget.toLocaleString()}万円</div>
+          <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>目標時点の税引後資産額</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: "#34d399" }}>{balanceAtTarget.toLocaleString()}万円</div>
+          {isOverPeriod && <div style={{ fontSize: 10, color: "#6b7280", marginTop: 6 }}>目標期間がシミュレーション<br />期間を超えています</div>}
         </div>
         <div>
           <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4 }}>{achieved ? "余裕額" : "不足額"}</div>
@@ -337,18 +337,12 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
         </div>
         {achieved && (
           <div style={{ flex: 1, minWidth: 160 }}>
-            <div style={{ fontSize: 13, color: "#6ee7b7", fontWeight: 700, lineHeight: 1.9 }}>
-              🎉 目標達成！余裕分 {Math.abs(diff).toLocaleString()}万円は安全マージンになります。
+            <div style={{ fontSize: 13, color: "#6ee7b7", fontWeight: 700, marginBottom: 6 }}>
+              🎉 目標達成！
             </div>
-            {(() => {
-              const finalBalance = chartData[chartData.length - 1]?.資産総額_税引後 ?? 0;
-              const monthlyFromFinal = Math.floor(finalBalance * (withdrawalRate / 100) / 12 * 10) / 10;
-              return (
-                <div style={{ marginTop: 4, fontSize: 12, color: "#9ca3af", lineHeight: 1.9 }}>
-                  最終資産から{withdrawalRate}%で取り崩すと月{monthlyFromFinal.toLocaleString()}万円使えます。
-                </div>
-              );
-            })()}
+            <div style={{ fontSize: 12, color: "#9ca3af", lineHeight: 2 }}>
+              <div>目標時点の税引後資産から{withdrawalRate}%で取り崩すと月<span style={{ color: "#6ee7b7", fontWeight: 700 }}>{Math.floor(balanceAtTarget * (withdrawalRate / 100) / 12 * 10) / 10}万円</span>使えます。</div>
+            </div>
           </div>
         )}
       </div>
@@ -522,7 +516,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
     return [...methods].map(method => {
       let perAmount, label;
       switch (method) {
-        case "lump_jan": case "lump_apr":
+        case "lump_jan":
           perAmount = Math.ceil(nisaRemain / years * 10) / 10;
           label = method === "lump_jan" ? "年始一括" : "年度始一括"; break;
         case "quarterly":
@@ -638,7 +632,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                 {fireMonthly > 0 && fireRate > 0 && (
                   <div style={{ marginTop: 6, display: "flex", alignItems: "baseline", gap: 6 }}>
                     <span style={{ fontSize: 11, color: "#6b7280" }}>FIRE必要資産（{fireRate}%取り崩し）：</span>
-                    <span style={{ fontSize: 18, fontWeight: 900, color: "#6ee7b7" }}>{Math.round(fireMonthly * 12 / (fireRate / 100)).toLocaleString()}万円</span>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: "#34d399" }}>{Math.round(fireMonthly * 12 / (fireRate / 100)).toLocaleString()}万円</span>
                   </div>
                 )}
               </div>
@@ -723,6 +717,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                     onBlur={e => { const v = e.target.value === "" ? 18 : Math.max(18, Math.min(100, Math.floor(Number(e.target.value)) || 18)); setStartAge(v); setStartAgeDraft(""); setStartAgeFocused(false); }}
                     style={{ ...S.inputBase, ...S.inputGreen, width: 44, borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none" }} />
                   <span style={{ fontSize: 13, color: "#6ee7b7" }}>歳</span>
+                  <span style={{ fontSize: 10, color: "#6b7280" }}>（開始年の{startMonth}月時点での年齢）</span>
                 </>)}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
@@ -930,6 +925,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
       <div style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.1)", borderRadius: 16, padding: "22px 8px 14px", marginBottom: 22 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginLeft: 16, marginBottom: 14, flexWrap: "wrap" }}>
           <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 3 }}>資産推移グラフ（年次）</div>
+          <div style={{ fontSize: 12, color: "#34d399", fontWeight: 700 }}>最終資産 {(chartData[chartData.length-1]?.資産総額_税引後 ?? 0).toLocaleString()}万円</div>
           {coastStartMonth && <div style={{ fontSize: 10, color: "#a78bfa" }}>🌙 放置期間</div>}
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -967,7 +963,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
       <div style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.1)", borderRadius: 16, padding: 24, marginBottom: 22 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
           <div>
-            <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 3, marginBottom: 4 }}>年別推移（各年末時点の資産額・税引後手取りを表示　概算税額は全額売却した場合の試算）</div>
+            <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 3, marginBottom: 4 }}>年別推移（各年末時点の資産額・税引後資産額を表示　概算税額は全額売却した場合の試算）</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#a7f3d0" }}>総期間 {periodLabel(Math.floor(totalMonths/12), totalMonths%12)}</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
@@ -987,11 +983,11 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
         </div>
         <div style={{ overflowX: "auto", maxHeight: 400, overflowY: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, whiteSpace: "nowrap" }}>
-            <thead style={{ position: "sticky", top: 0, background: "#050e09", zIndex: 1 }}>
+            <thead style={{ position: "sticky", top: 0, background: "#030806", zIndex: 1 }}>
               <tr style={{ color: "#6ee7b7", fontSize: 10 }}>
                 {(showDetail
-                  ? ["年", ...(useStartDate && startAge > 0 ? ["年齢"] : []), "入金額","元本累計","NISA口座","特定口座","税引前合計","▲ 概算税額","税引後手取り","NISA残枠",""]
-                  : ["年", ...(useStartDate && startAge > 0 ? ["年齢"] : []), "元本累計","税引前合計","税引後手取り",""]
+                  ? ["年", ...(useStartDate && startAge > 0 ? ["年齢"] : []), "入金額","元本累計","NISA口座","特定口座","税引前資産額","▲ 概算税額","税引後資産額","NISA残枠",""]
+                  : ["年", ...(useStartDate && startAge > 0 ? ["年齢"] : []), "元本累計","税引前資産額","税引後資産額",""]
                 ).map(h => (
                   <th key={h} style={{ padding: "7px 10px", textAlign: "right", fontWeight: 400, borderBottom: "1px solid rgba(16,185,129,0.15)" }}>{h}</th>
                 ))}
@@ -1093,9 +1089,9 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             <div style={{ fontSize: 13, color: "#a7f3d0", marginBottom: 8 }}>
               {useStartDate ? "何年（何歳）にFIREしたい？" : "何年目にFIREしたい？"}
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
               <input type="number" min={useStartDate ? startYear : 1} max={useStartDate ? 2100 : 100}
-                value={fireYearFocused ? (fireYearDraft ?? "") : fireTargetYear}
+                value={fireYearFocused ? (fireYearDraft ?? "") : (fireTargetYear === 0 ? (useStartDate ? (monthlyData?.[monthlyData.length-1]?.actualYear ?? "") : (chartData[chartData.length-1]?.x ?? "")) : fireTargetYear)}
                 onFocus={() => { setFireYearFocused(true); setFireYearDraft(fireTargetYear === 0 ? "" : String(fireTargetYear)); }}
                 onChange={e => setFireYearDraft(e.target.value)}
                 onBlur={e => {
@@ -1104,11 +1100,14 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                 }}
                 style={{ ...S.inputBase, ...S.inputGreen, width: 80, borderRadius: 6, padding: "4px 8px", textAlign: "right", outline: "none" }} />
               <span style={{ fontSize: 14, color: "#6ee7b7" }}>{useStartDate ? "年" : "年目"}</span>
-              {useStartDate && <>
+              {useStartDate && startAge > 0 && <>
                 <span style={{ fontSize: 12, color: "#4b5563", margin: "0 6px" }}>または</span>
                 <input type="number" min={startAge} max={120}
-                  value={fireAgeFocused ? (fireAgeDraft ?? "") : (fireTargetYear > 0 && startAge > 0 ? startAge + (fireTargetYear - startYear) : 0)}
-                  onFocus={() => { setFireAgeFocused(true); const age = fireTargetYear > 0 && startAge > 0 ? startAge + (fireTargetYear - startYear) : 0; setFireAgeDraft(age > 0 ? String(age) : ""); }}
+                  value={fireAgeFocused ? (fireAgeDraft ?? "") : (() => {
+                    const yr = fireTargetYear === 0 ? (monthlyData?.[monthlyData.length-1]?.actualYear ?? startYear) : fireTargetYear;
+                    return startAge + (yr - startYear);
+                  })()}
+                  onFocus={() => { setFireAgeFocused(true); const yr = fireTargetYear === 0 ? (monthlyData?.[monthlyData.length-1]?.actualYear ?? startYear) : fireTargetYear; setFireAgeDraft(String(startAge + (yr - startYear))); }}
                   onChange={e => setFireAgeDraft(e.target.value)}
                   onBlur={e => {
                     const age = Math.floor(Number(e.target.value));
@@ -1117,10 +1116,16 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                   }}
                   style={{ ...S.inputBase, ...S.inputGreen, width: 80, borderRadius: 6, padding: "4px 8px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 14, color: "#6ee7b7" }}>歳</span>
-                {startAge === 0 && <span style={{ fontSize: 10, color: "#6b7280" }}>（年齢は開始時年齢を設定すると入力できます。）</span>}
-                {startAge > 0 && fireTargetYear > 0 && <span style={{ fontSize: 11, color: "#4b5563" }}>（{startAge + (fireTargetYear - startYear)}歳 = {fireTargetYear}年）</span>}
+                <span style={{ fontSize: 10, color: "#6b7280" }}>（{startMonth}月時点）</span>
               </>}
+              {useStartDate && startAge === 0 && <span style={{ fontSize: 10, color: "#6b7280" }}>（年齢は開始時年齢を設定すると入力できます。）</span>}
             </div>
+            {fireTargetYear > 0 && (
+              <button onClick={() => {
+                const lastMonth = monthlyData?.[monthlyData.length-1]?.calendarMonth ?? ((startMonth - 1 + totalMonths) % 12) + 1;
+                pushHistory({ fireTargetYear: 0, fireTargetMonth: lastMonth });
+              }} style={{ fontSize: 11, color: "#6ee7b7", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 6, padding: "4px 12px", cursor: "pointer", marginBottom: 8 }}>最終年に戻す</button>
+            )}
             {useStartDate && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
@@ -1246,7 +1251,7 @@ export default function NisaSimulator() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050e09", fontFamily: "Noto Sans JP, sans-serif", color: "#e2f5ec", padding: "32px 16px" }}>
+    <div style={{ minHeight: "100vh", background: "#030806", fontFamily: "Noto Sans JP, sans-serif", color: "#e2f5ec", padding: "32px 16px" }}>
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet" />
 
       {/* ========== 広告1: タイトルの上 ==========
