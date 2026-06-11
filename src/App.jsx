@@ -216,7 +216,8 @@ function runSim(state) {
     const d = data[idx];
     const actualYear = sYear + d.calendarYear;
     const yearLabel = d.calendarYear - startCalendarYear + 1;
-    const row = { ...d, x: yearLabel, actualYear, 中央値: d.資産総額_税引前 };
+    const age = state.startAge > 0 ? state.startAge + (d.calendarYear - startCalendarYear) : null;
+    const row = { ...d, x: yearLabel, actualYear, age, 中央値: d.資産総額_税引前 };
     return row;
   });
 
@@ -708,17 +709,21 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                   }}
                   style={{ ...S.inputBase, ...S.inputGreen, width: 64, borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 13, color: "#6ee7b7" }}>年</span>
-                <span style={{ fontSize: 12, color: "#4b5563", margin: "0 6px" }}>開始時</span>
-                <input type="number" min={0} max={100}
-                  value={startAgeFocused ? (startAgeDraft === null ? "" : startAgeDraft) : startAge}
-                  onFocus={() => { setStartAgeFocused(true); setStartAgeDraft(startAge === 0 ? "" : String(startAge)); }}
-                  onChange={e => setStartAgeDraft(e.target.value)}
-                  onBlur={e => { const v = e.target.value === "" ? 0 : Math.max(0, Math.min(100, Math.floor(Number(e.target.value)) || 0)); setStartAge(v < 18 && v !== 0 ? 18 : v); setStartAgeDraft(""); setStartAgeFocused(false); }}
-                  style={{ ...S.inputBase, ...S.inputGreen, width: 44, borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none" }} />
-                <span style={{ fontSize: 13, color: "#6ee7b7" }}>歳</span>
-              </div>
-              <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 6, lineHeight: 1.7 }}>
-                年齢を設定する場合は、開始する年になる年齢を入力してください。
+                <button onClick={() => setStartAge(startAge > 0 ? 0 : 18)} style={{
+                  background: startAge > 0 ? "rgba(16,185,129,0.15)" : "rgba(16,185,129,0.04)",
+                  border: `1px solid ${startAge > 0 ? "rgba(16,185,129,0.5)" : "rgba(16,185,129,0.15)"}`,
+                  borderRadius: 8, padding: "4px 12px", cursor: "pointer",
+                  color: startAge > 0 ? "#6ee7b7" : "#4b5563", fontSize: 11, fontWeight: startAge > 0 ? 700 : 400,
+                }}>年齢 {startAge > 0 ? "ON" : "OFF"}</button>
+                {startAge > 0 && (<>
+                  <input type="number" min={18} max={100}
+                    value={startAgeFocused ? (startAgeDraft === null ? "" : startAgeDraft) : startAge}
+                    onFocus={() => { setStartAgeFocused(true); setStartAgeDraft(String(startAge)); }}
+                    onChange={e => setStartAgeDraft(e.target.value)}
+                    onBlur={e => { const v = e.target.value === "" ? 18 : Math.max(18, Math.min(100, Math.floor(Number(e.target.value)) || 18)); setStartAge(v); setStartAgeDraft(""); setStartAgeFocused(false); }}
+                    style={{ ...S.inputBase, ...S.inputGreen, width: 44, borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none" }} />
+                  <span style={{ fontSize: 13, color: "#6ee7b7" }}>歳</span>
+                </>)}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
                 {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
@@ -936,7 +941,18 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
               <linearGradient id="gCost"  x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#475569" stopOpacity={0.4}  /><stop offset="100%" stopColor="#475569" stopOpacity={0.02} /></linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.07)" />
-            <XAxis dataKey={useStartDate ? "actualYear" : "x"} stroke="#10b981" tick={{ fontSize: 11, fill: "#6ee7b7" }} tickFormatter={v => useStartDate ? `${v}年` : `${v}年目`} tickCount={Math.ceil(totalMonths / 12 / 5) + 1} interval={0} ticks={useStartDate ? undefined : Array.from({ length: Math.ceil(totalMonths / 12 / 5) + 1 }, (_, i) => i * 5).filter(v => v <= Math.ceil(totalMonths / 12))} />
+            <XAxis
+              dataKey={useStartDate && startAge > 0 ? "age" : useStartDate ? "actualYear" : "x"}
+              stroke="#10b981"
+              tick={{ fontSize: 11, fill: "#6ee7b7" }}
+              tickFormatter={v => useStartDate && startAge > 0 ? `${v}歳` : useStartDate ? `${v}年` : `${v}年目`}
+              interval={0}
+              ticks={useStartDate && startAge > 0
+                ? Array.from({ length: Math.ceil(totalMonths / 12 / 5) + 1 }, (_, i) => startAge + i * 5).filter(v => v <= startAge + Math.ceil(totalMonths / 12))
+                : useStartDate
+                ? Array.from({ length: Math.ceil(totalMonths / 12 / 5) + 1 }, (_, i) => startYear + i * 5).filter(v => v <= startYear + Math.ceil(totalMonths / 12))
+                : Array.from({ length: Math.ceil(totalMonths / 12 / 5) + 1 }, (_, i) => i * 5).filter(v => v <= Math.ceil(totalMonths / 12))}
+            />
             <YAxis stroke="#10b981" tick={{ fontSize: 11, fill: "#6ee7b7" }} tickFormatter={v => v >= 10000 ? `${(v/10000).toFixed(0)}億` : `${v}万`} />
             <Tooltip content={<CustomTooltip coastStartMonth={coastStartMonth} />} />
             <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
