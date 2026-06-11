@@ -69,7 +69,7 @@ const INITIAL_SIM_STATE = {
   coastMonths: 0,
   startMonth: 1,
   startYear: new Date().getFullYear(),
-  startAge: 0,
+  startAge: 18,
   useStartDate: false,
   showFire: false,
   fireMonthly: 0,
@@ -590,7 +590,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
     const dots = (str.match(/\./g) || []).length;
     const nonDots = str.replace(/[-.]/g, '').length;
     const chars = Math.max(1, nonDots + dots * 0.5);
-    const width = chars * 12 + 14;
+    const width = chars * 12 + 8;
     return {
       background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)",
       color: "#6ee7b7", fontSize: 16, fontWeight: 700, width,
@@ -713,7 +713,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                   value={startAgeFocused ? (startAgeDraft === null ? "" : startAgeDraft) : startAge}
                   onFocus={() => { setStartAgeFocused(true); setStartAgeDraft(startAge === 0 ? "" : String(startAge)); }}
                   onChange={e => setStartAgeDraft(e.target.value)}
-                  onBlur={e => { const v = e.target.value === "" ? 0 : Math.max(0, Math.min(100, Math.floor(Number(e.target.value)) || 0)); setStartAge(v); setStartAgeDraft(""); setStartAgeFocused(false); }}
+                  onBlur={e => { const v = e.target.value === "" ? 0 : Math.max(0, Math.min(100, Math.floor(Number(e.target.value)) || 0)); setStartAge(v < 18 && v !== 0 ? 18 : v); setStartAgeDraft(""); setStartAgeFocused(false); }}
                   style={{ ...S.inputBase, ...S.inputGreen, width: 44, borderRadius: 6, padding: "4px 6px", textAlign: "right", outline: "none" }} />
                 <span style={{ fontSize: 13, color: "#6ee7b7" }}>歳</span>
               </div>
