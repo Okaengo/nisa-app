@@ -590,7 +590,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
     const dots = (str.match(/\./g) || []).length;
     const nonDots = str.replace(/[-.]/g, '').length;
     const chars = Math.max(1, nonDots + dots * 0.5);
-    const width = chars * 12 + 8;
+    const width = chars * 12;
     return {
       background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)",
       color: "#6ee7b7", fontSize: 16, fontWeight: 700, width,
