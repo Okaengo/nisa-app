@@ -582,7 +582,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
 
   const dynInput = (val, base = {}) => {
     const str = String(val || 0);
-    const dots = (str.match(/\./g) || []).length;
+    const dots = (str.match(/./g) || []).length;
     const nonDots = str.replace(/[-.]/g, '').length;
     const chars = Math.max(1, nonDots + dots * 0.5);
     const width = chars * 12;
