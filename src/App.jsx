@@ -246,7 +246,7 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
   const annualAmount = monthlyAmount * 12;
   const required = withdrawalRate > 0 ? Math.round(annualAmount / (withdrawalRate / 100)) : 0;
 
-  let targetRow, label, isOverPeriod = false;
+  let targetRow, isOverPeriod = false;
   const lastMonthlyRow = monthlyData?.[monthlyData.length - 1];
   const lastChartRow = chartData[chartData.length - 1];
 
@@ -259,16 +259,16 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
       ?? monthlyData.find(d => d.actualYear > searchYear);
     isOverPeriod = targetYear > 0 && !exactRow;
     targetRow = exactRow ?? last;
-    label = `${targetRow?.actualYear}年${targetRow?.calendarMonth}月時点`;
+
   } else if (targetYear > 0) {
     const last = lastChartRow;
     const row = chartData.find(d => d.x >= targetYear);
     isOverPeriod = !row;
     targetRow = row ?? last;
-    label = isOverPeriod ? "最終時点" : `${targetRow.x}年目時点`;
+
   } else {
     targetRow = lastChartRow;
-    label = "最終時点";
+
   }
 
   const balanceAtTarget = targetRow?.資産総額_税引後 ?? 0;
