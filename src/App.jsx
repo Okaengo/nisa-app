@@ -349,6 +349,7 @@ function FireResult({ monthlyAmount, withdrawalRate, targetYear, targetMonth, ch
       {/* 不足時：提案を横幅フルで表示 */}
       {!achieved && (
         <div style={{ fontSize: 12, color: "#9ca3af", lineHeight: 2, borderTop: "1px solid rgba(16,185,129,0.08)", paddingTop: 10 }}>
+          <div>目標時点の税引後資産から{withdrawalRate}%で取り崩すと月<span style={{ color: "#6ee7b7", fontWeight: 700 }}>{Math.floor(balanceAtTarget * (withdrawalRate / 100) / 12 * 10) / 10}万円</span>使えます。</div>
           {monthlyAdd !== null && <div>・積立額を全体で月+{monthlyAdd}万円増やすと達成できます。</div>}
           {yearsExtend !== null && <div>・目標を{yearsExtend}まで延ばすと達成できます。</div>}
         </div>
@@ -1277,7 +1278,7 @@ export default function NisaSimulator() {
 
       <div style={{ textAlign: "center", marginBottom: 36 }}>
         <div style={{ fontSize: 11, letterSpacing: 6, color: "#10b981", marginBottom: 8 }}>INVESTMENT SIMULATOR</div>
-        <h1 style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: "clamp(22px, 5vw, 48px)", letterSpacing: 4, background: "linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0, lineHeight: 1.1 }}>NISA 積み立てシミュレーター</h1>
+        <h1 style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: "clamp(22px, 5vw, 48px)", letterSpacing: 4, background: "linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0, lineHeight: 1.1 }}>新NISA 積み立てシミュレーター</h1>
         <p style={{ color: "#6ee7b7", opacity: 0.7, fontSize: 12, marginTop: 8 }}>生涯非課税枠 1,800万円 ／ 年間上限 360万円 ／ 超過分は特定口座（税率 20.315%）</p>
       </div>
 
