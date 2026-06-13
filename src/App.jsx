@@ -1277,7 +1277,7 @@ export default function NisaSimulator() {
 
       <div style={{ textAlign: "center", marginBottom: 36 }}>
         <div style={{ fontSize: 11, letterSpacing: 6, color: "#10b981", marginBottom: 8 }}>INVESTMENT SIMULATOR</div>
-        <h1 style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: "clamp(26px, 6vw, 56px)", letterSpacing: 4, background: "linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0, lineHeight: 1.1 }}>NISA 積み立てシミュレーター</h1>
+        <h1 style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: "clamp(22px, 5vw, 48px)", letterSpacing: 4, background: "linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0, lineHeight: 1.1 }}>NISA 積み立てシミュレーター</h1>
         <p style={{ color: "#6ee7b7", opacity: 0.7, fontSize: 12, marginTop: 8 }}>生涯非課税枠 1,800万円 ／ 年間上限 360万円 ／ 超過分は特定口座（税率 20.315%）</p>
       </div>
 
@@ -1470,6 +1470,9 @@ export default function NisaSimulator() {
           <p style={{ color: "#9ca3af", fontSize: 12, lineHeight: 1.8, borderTop: "1px solid rgba(16,185,129,0.1)", paddingTop: 20, marginTop: 8 }}>
             ※ このシミュレーターは情報提供を目的としており、特定の金融商品への投資を推奨するものではありません。シミュレーション結果は入力値をもとにした参考値であり、実際の運用成績・税額とは異なる場合があります。投資判断はご自身の責任において行ってください。<br />
             ※ 月次複利計算。ボーナスは6月・12月に一括投資。配当・分配金の課税は考慮外。税率 20.315%（所得税15% + 復興特別所得税0.315% + 住民税5%）。
+          </p>
+          <p style={{ marginTop: 12, fontSize: 12 }}>
+            <a href="/privacy.html" style={{ color: "#6ee7b7" }}>プライバシーポリシー</a>
           </p>
         </div>
       </div>
