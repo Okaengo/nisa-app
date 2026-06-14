@@ -119,7 +119,7 @@ function runSim(state) {
 
   function simulate(rate) {
     const realRate = ((1 + rate / 100) / (1 + inflationRate / 100) - 1) * 100;
-    const monthlyRate = realRate / 100 / 12;
+    const monthlyRate = Math.pow(1 + realRate / 100, 1/12) - 1;
     let nisaBalance = 0, taxableBalance = 0, taxableCost = 0, nisaUsed = 0, nisaUsedThisYear = 0, totalInvested = 0;
     const data = [];
     const bonusMonthSet = (times) => times <= 0 ? new Set() : times === 1 ? new Set([11]) : new Set([5, 11]);
