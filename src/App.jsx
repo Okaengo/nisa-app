@@ -214,7 +214,7 @@ function runSim(state) {
     const actualYear = sYear + d.calendarYear;
     const yearLabel = d.calendarYear - startCalendarYear + 1;
     const age = state.startAge > 0 ? state.startAge + (d.calendarYear - startCalendarYear) : null;
-    const row = { ...d, x: yearLabel, actualYear, age, 中央値: d.資産総額_税引前 };
+    const row = { ...d, x: yearLabel, actualYear, age, 運用資産: d.資産総額_税引前 };
     return row;
   });
 
@@ -955,7 +955,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
             {coastStartMonth && <ReferenceLine x={coastStartMonth} stroke="#a78bfa" strokeDasharray="5 3" strokeWidth={1.5} label={{ value: "🌙 放置開始", position: coastStartMonth > Math.ceil(totalMonths / 12) * 0.75 ? "insideTopRight" : "insideTopLeft", fontSize: 10, fill: "#a78bfa", offset: 10 }} />}
             <Area type="monotone" dataKey="投資元本" stroke="#64748b" strokeWidth={1.5} fill="url(#gCost)" strokeDasharray="4 2" />
-            <Area type="monotone" dataKey="中央値" stroke="#6ee7b7" strokeWidth={2.5} fill="url(#gMid)" dot={false} />
+            <Area type="monotone" dataKey="運用資産" stroke="#6ee7b7" strokeWidth={2.5} fill="url(#gMid)" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
