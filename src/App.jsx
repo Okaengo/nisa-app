@@ -953,7 +953,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
             <YAxis stroke="#10b981" tick={{ fontSize: 11, fill: "#6ee7b7" }} tickFormatter={v => v >= 10000 ? `${(v/10000).toFixed(0)}億` : `${v}万`} />
             <Tooltip content={<CustomTooltip coastStartMonth={coastStartMonth} />} />
             <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-            {coastStartMonth && <ReferenceLine x={coastStartMonth} stroke="#a78bfa" strokeDasharray="5 3" strokeWidth={1.5} label={{ value: "🌙 放置開始", position: "top", fontSize: 10, fill: "#a78bfa" }} />}
+            {coastStartMonth && <ReferenceLine x={coastStartMonth} stroke="#a78bfa" strokeDasharray="5 3" strokeWidth={1.5} label={{ value: "🌙 放置開始", position: "insideTopLeft", fontSize: 10, fill: "#a78bfa", offset: 10 }} />}
             <Area type="monotone" dataKey="投資元本" stroke="#64748b" strokeWidth={1.5} fill="url(#gCost)" strokeDasharray="4 2" />
             <Area type="monotone" dataKey="中央値" stroke="#6ee7b7" strokeWidth={2.5} fill="url(#gMid)" dot={false} />
           </AreaChart>
