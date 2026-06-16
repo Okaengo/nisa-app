@@ -1278,7 +1278,7 @@ export default function NisaSimulator() {
 
       <div style={{ textAlign: "center", marginBottom: 36 }}>
         <div style={{ fontSize: 11, letterSpacing: 6, color: "#10b981", marginBottom: 8 }}>INVESTMENT SIMULATOR</div>
-        <h1 style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: "clamp(22px, 5vw, 48px)", letterSpacing: 4, background: "linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0, lineHeight: 1.1 }}>新NISA 積み立てシミュレーター</h1>
+        <h1 style={{ fontFamily: "Bebas Neue, sans-serif", fontSize: "clamp(20px, 4.5vw, 44px)", letterSpacing: 4, background: "linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0, lineHeight: 1.1 }}>新NISA 積み立てシミュレーター</h1>
         <p style={{ color: "#6ee7b7", opacity: 0.7, fontSize: 12, marginTop: 8 }}>生涯非課税枠 1,800万円 ／ 年間上限 360万円 ／ 超過分は特定口座（税率 20.315%）</p>
       </div>
 
