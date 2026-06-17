@@ -924,10 +924,12 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
         data-full-width-responsive="true" />
       ============================================================== */}
       <div style={{ background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.1)", borderRadius: 16, padding: "22px 8px 14px", marginBottom: 22 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginLeft: 16, marginBottom: 14, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 3 }}>資産推移グラフ（年次）</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginLeft: 16, marginRight: 16, marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 10, color: "#6ee7b7", letterSpacing: 3 }}>資産推移グラフ（年次）</div>
+            {coastStartMonth && <div style={{ fontSize: 10, color: "#a78bfa" }}>🌙 放置期間</div>}
+          </div>
           <div style={{ fontSize: 12, color: "#34d399", fontWeight: 700 }}>最終資産 {(chartData[chartData.length-1]?.資産総額_税引後 ?? 0).toLocaleString()}万円</div>
-          {coastStartMonth && <div style={{ fontSize: 10, color: "#a78bfa" }}>🌙 放置期間</div>}
         </div>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
@@ -1125,7 +1127,7 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
               <button onClick={() => {
                 const lastMonth = monthlyData?.[monthlyData.length-1]?.calendarMonth ?? ((startMonth - 1 + totalMonths) % 12) + 1;
                 pushHistory({ fireTargetYear: 0, fireTargetMonth: lastMonth });
-              }} style={{ fontSize: 11, color: "#6ee7b7", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 6, padding: "4px 12px", cursor: "pointer", marginBottom: 8 }}>最終年に戻す</button>
+              }} style={{ fontSize: 11, color: "#6ee7b7", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 6, padding: "4px 12px", cursor: "pointer", marginBottom: 4 }}>最終年に戻す</button>
             )}
             {useStartDate && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -1139,11 +1141,6 @@ const PlanSimulator = forwardRef(function PlanSimulator({ planName, isActive, on
                 }}>{m}月</button>
               ))}
             </div>
-            )}
-            {fireTargetYear > 0 && (
-              <div style={{ marginTop: 6, fontSize: 11, color: "#4b5563" }}>
-                {useStartDate ? `${fireTargetYear}年${fireTargetMonth}月を目標に設定` : `${fireTargetYear}年目${fireTargetMonth}月を目標に設定`}
-              </div>
             )}
           </div>
 
